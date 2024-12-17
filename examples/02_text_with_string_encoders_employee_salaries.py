@@ -128,6 +128,18 @@ string_encoder_pipe = clone(gap_pipe).set_params(
 string_encoder_results = cross_validate(string_encoder_pipe, X, y, scoring="r2")
 results.append(("StringEncoder - char_wb, (3,4)", string_encoder_results))
 
+# %% StringEncoder
+from skrub import StringEncoder
+
+string_encoder = StringEncoder(n_components=30, ngram_range=(3, 4), analyzer="char_wb")
+
+string_encoder_pipe = clone(gap_pipe).set_params(
+    **{"tablevectorizer__high_cardinality": string_encoder}
+)
+string_encoder_results = cross_validate(string_encoder_pipe, X, y, scoring="r2")
+results.append(("StringEncoder - char_wb, (3,4)", string_encoder_results))
+
+
 # %% Drop column
 drop_pipe = clone(gap_pipe).set_params(**{"tablevectorizer__high_cardinality": "drop"})
 drop_results = cross_validate(drop_pipe, X, y, scoring="r2")
@@ -209,5 +221,57 @@ def plot_performance_tradeoff(results):
 
 
 plot_performance_tradeoff(results)
+
+# %% More on stringencoder
+from skrub import StringEncoder
+
+results = []
+string_encoder = StringEncoder(n_components=30, ngram_range=(3, 4), analyzer="char_wb")
+
+string_encoder_pipe = clone(gap_pipe).set_params(
+    **{"tablevectorizer__high_cardinality": string_encoder}
+)
+string_encoder_results = cross_validate(string_encoder_pipe, X, y, scoring="r2")
+results.append(("StringEncoder - char_wb, (3,4)", string_encoder_results))
+
+# %% StringEncoder
+from skrub import StringEncoder
+
+string_encoder = StringEncoder(n_components=30, ngram_range=(1, 1), analyzer="char_wb")
+
+string_encoder_pipe = clone(gap_pipe).set_params(
+    **{"tablevectorizer__high_cardinality": string_encoder}
+)
+string_encoder_results = cross_validate(string_encoder_pipe, X, y, scoring="r2")
+results.append(("StringEncoder - char_wb, (1,1)", string_encoder_results))
+
+# %% StringEncoder
+from skrub import StringEncoder
+
+string_encoder = StringEncoder(n_components=30, ngram_range=(1, 1), analyzer="word")
+
+string_encoder_pipe = clone(gap_pipe).set_params(
+    **{"tablevectorizer__high_cardinality": string_encoder}
+)
+string_encoder_results = cross_validate(string_encoder_pipe, X, y, scoring="r2")
+results.append(("StringEncoder - word, (1,1)", string_encoder_results))
+
+
+# %%
+import numpy as np
+from sklearn.preprocessing import OrdinalEncoder
+
+ordinal_encoder = OrdinalEncoder(
+    handle_unknown="use_encoded_value", unknown_value=np.nan
+)
+
+ordinal_encoder_pipe = clone(gap_pipe).set_params(
+    **{"tablevectorizer__high_cardinality": ordinal_encoder}
+)
+ordinal_encoder_results = cross_validate(ordinal_encoder_pipe, X, y, scoring="r2")
+results.append(("OrdinalEncoder", ordinal_encoder_results))
+
+# %%
+plot_box_results(results)
 
 # %%
