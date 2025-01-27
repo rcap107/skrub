@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from sklearn.base import clone
 from sklearn.decomposition import TruncatedSVD
@@ -8,6 +9,7 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.pipeline import Pipeline
 
+from skrub import TableVectorizer
 from skrub import _dataframe as sbd
 from skrub._string_encoder import StringEncoder
 
@@ -189,3 +191,32 @@ def test_n_components(df_module):
     assert not hasattr(encoder_30, "tsvd_")
     assert sbd.shape(X_out)[1] == 30
     assert encoder_30.n_components_ == 30
+
+
+def test_null_values(df_module):
+    n_components = 2
+
+    encoder = StringEncoder(
+        n_components=n_components,
+        vectorizer="tfidf",
+    )
+
+    X = df_module.make_column("a", ["one", "", "three"])
+    encoder.fit_transform(X)
+
+    X = df_module.make_column("a", ["one", np.nan, "three"])
+    encoder.fit_transform(X)
+
+    X = df_module.make_column("a", ["one", None, "three"])
+    encoder.fit_transform(X)
+
+    tv = TableVectorizer(high_cardinality=encoder, cardinality_threshold=0)
+
+    X = df_module.make_dataframe(
+        {
+            "a": ["one", "", "three"],
+            "b": ["one", np.nan, "three"],
+            "c": ["one", None, "three"],
+        }
+    )
+    tv.fit_transform(X)

@@ -9,6 +9,7 @@ from sklearn.feature_extraction.text import (
 from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
+from ._clean_null_strings import CleanNullStrings
 from ._on_each_column import SingleColumnTransformer
 
 
@@ -111,6 +112,8 @@ class StringEncoder(SingleColumnTransformer):
         """
         del y
 
+        X = self._preprocess_nulls(X)
+
         if self.vectorizer == "tfidf":
             self.vectorizer_ = TfidfVectorizer(
                 ngram_range=self.ngram_range, analyzer=self.analyzer
@@ -161,6 +164,11 @@ class StringEncoder(SingleColumnTransformer):
         self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components_)]
 
         return self._post_process(X, result)
+
+    def _preprocess_nulls(self, X):
+        X = CleanNullStrings().fit_transform(X)
+        X = sbd.fill_nulls(X, "")
+        return X
 
     def transform(self, X):
         """Transform a column.
