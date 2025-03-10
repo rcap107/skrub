@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
-from sklearn.base import clone
 from sklearn.preprocessing import SplineTransformer
 from sklearn.utils.validation import check_is_fitted
 
@@ -30,6 +29,9 @@ _TIME_LEVELS = [
 ]
 
 _DEFAULT_ENCODING_PERIODS = {"year": 366, "month": 30, "weekday": 7, "hour": 24}
+
+# We reduce the number of splines for a year to avoid introducing too many features
+_DEFAULT_N_SPLINES = {"year": 12, "month": 30, "weekday": 7, "hour": 24}
 
 
 @dispatch
@@ -407,37 +409,37 @@ class DatetimeEncoder(SingleColumnTransformer):
 
         # Iterating over all attributes that end with _encoding to use the default
         # parameters
-        if self.add_periodic:
-            enc_attr = [attr for attr in self.__dict__ if attr.endswith("_encoding")]
-            for enc_name in enc_attr:
-                enc = self.__getattribute__(enc_name)
-                enc_case = enc_name.split("_")[0]
+        if self.add_periodic is not None:
+            _new_features = []
+            self.all_outputs_ = []
 
-                # The user provided a specific instance of the encoder for this case
-                if isinstance(enc, (SplineEncoder, CircularEncoder)):
-                    self._required_transformers[enc_case] = clone(enc)
+            if self.add_periodic == "spline":
+                self.spline_transformers_ = dict()
+            else:
+                self.spline_transformers_ = None
+
+            for enc_feat in ["year", "month", "day_of_week", "hour"]:
+                # Get the feature and fill nulls
+                col_to_encode = self._fill_nulls(_get_dt_feature(column, enc_feat))
+                col_name = sbd.name(column)
+
+                if self.add_periodic == "circular":
+                    _nf, _ao = self._add_circular_features(
+                        col_to_encode, enc_feat, col_name
+                    )
+                elif self.add_periodic == "spline":
+                    self.spline_transformers_[enc_feat] = (
+                        self._build_spline_transformer(enc_feat)
+                    )
+                    _nf, _ao = self._fit_spline_features(
+                        col_to_encode, enc_feat, col_name
+                    )
                 else:
-                    if enc is None:
-                        # This encoder has been disabled
-                        continue
-                    if enc == "circular":
-                        self._required_transformers[enc_case] = CircularEncoder(
-                            period=_DEFAULT_ENCODING_PERIODS[enc_case]
-                        )
-                    elif enc == "spline":
-                        self._required_transformers[enc_case] = SplineEncoder(
-                            period=_DEFAULT_ENCODING_PERIODS[enc_case]
-                        )
-                    else:
-                        raise ValueError(f"Unsupported option {enc} for {enc_name}")
-
-            for _case, t in self._required_transformers.items():
-                _feat = _get_dt_feature(column, _case)
-                _feat_name = sbd.name(_feat) + "_" + _case
-                _feat = sbd.rename(_feat, _feat_name)
-                # Filling null values for periodc encoder
-                t.fit(self._fill_nulls(_feat))
-                self.extracted_features_ += t.all_outputs_
+                    raise ValueError(
+                        f"Unsupported option {self.add_periodic} for add_periodic"
+                    )
+                _new_features += _nf
+                self.all_outputs_ += _ao
 
         return self.transform(column)
 
@@ -483,6 +485,60 @@ class DatetimeEncoder(SingleColumnTransformer):
         X_out = sbd.where_row(X_out, self.not_nulls, _null_mask)
 
         return X_out
+
+    def _add_circular_features(self, col, variable, name):
+        period = _DEFAULT_ENCODING_PERIODS[variable]
+
+        X_out = [
+            np.sin(col / period * 2 * np.pi),
+            np.cos(col / period * 2 * np.pi),
+        ]
+
+        all_outputs = [f"{name}_spline_{idx}" for idx in range(2)]
+
+        return X_out, all_outputs
+
+    def _build_spline_transformer(self, feature):
+        period = _DEFAULT_ENCODING_PERIODS[feature]
+        n_splines = _DEFAULT_N_SPLINES[feature]
+
+        spline_transformer = self._periodic_spline_transformer(n_splines, period)
+        return spline_transformer
+
+    def _fit_spline_features(self, col, variable, name):
+        X_out = self.spline_transformers_[variable].fit_transform(
+            sbd.to_numpy(col).reshape(-1, 1)
+        )
+
+        n_components = X_out.shape[1]
+
+        name = sbd.name(col)
+        all_outputs = [f"{name}_spline_{idx}" for idx in range(n_components)]
+
+        return X_out, all_outputs
+
+    def _transform_spline_features(self, col, variable, name):
+        X_out = self.spline_transformers_[variable].transform(
+            sbd.to_numpy(col).reshape(-1, 1)
+        )
+
+        n_components = X_out.shape[1]
+
+        all_outputs = [f"{name}_spline_{idx}" for idx in range(n_components)]
+
+        return X_out, all_outputs
+
+    def _periodic_spline_transformer(self, n_splines, period, degree=3):
+        if n_splines is None:
+            n_splines = period
+        n_knots = n_splines + 1  # periodic and include_bias is True
+        return SplineTransformer(
+            degree=degree,
+            n_knots=n_knots,
+            knots=np.linspace(0, period, n_knots).reshape(n_knots, 1),
+            extrapolation="periodic",
+            include_bias=True,
+        )
 
     def _fill_nulls(self, column):
         # Fill all null values in the column with an arbitrary value
@@ -594,18 +650,6 @@ class SplineEncoder(SingleColumnTransformer):
         result = sbd.copy_index(X, result)
 
         return result
-
-    def _periodic_spline_transformer(self):
-        if self.n_splines is None:
-            self.n_splines = self.period
-        n_knots = self.n_splines + 1  # periodic and include_bias is True
-        return SplineTransformer(
-            degree=self.degree,
-            n_knots=n_knots,
-            knots=np.linspace(0, self.period, n_knots).reshape(n_knots, 1),
-            extrapolation="periodic",
-            include_bias=True,
-        )
 
 
 class CircularEncoder(SingleColumnTransformer):
