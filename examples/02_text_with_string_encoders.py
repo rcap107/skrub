@@ -135,7 +135,7 @@ plot_gap_feature_importance(X_trans.head())
 # We set ``n_components`` to 30; however, to achieve the best performance, we would
 # need to find the optimal value for this hyperparameter using either |GridSearchCV|
 # or |RandomizedSearchCV|. We skip this part to keep the computation time for this
-# small example.
+# example low.
 #
 # Recall that the ROC AUC is a metric that quantifies the ranking power of estimators,
 # where a random estimator scores 0.5, and an oracle —providing perfect predictions—

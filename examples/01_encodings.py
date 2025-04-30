@@ -178,7 +178,7 @@ vectorizer.output_to_input_["department_BOA"]
 # ~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Note that ``"date_first_hired"`` has been recognized and processed as a datetime
-# ßcolumn.
+# column.
 
 vectorizer.column_to_kind_["date_first_hired"]
 
