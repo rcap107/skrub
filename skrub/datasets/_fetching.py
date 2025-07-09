@@ -39,11 +39,13 @@ def fetch_employee_salaries(data_home=None, split="all"):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - ``employee_salaries`` : pd.DataFrame, the dataframe. Size 9228 rows x 9 columns.
+        - ``employee_salaries`` : pd.DataFrame, the dataframe. Size 9228 rows x 9
+          columns.
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
           labels. Size 9228 rows x 8 columns.
         - ``y : pd.DataFrame, target labels. Size 9228 rows x 1 column.
-        - ``metadata`` : a dictionary containing the name, description, source and target
+        - ``metadata`` : a dictionary containing the name, description, source and
+          target
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -88,11 +90,13 @@ def fetch_medical_charge(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - ``medical_charge`` : pd.DataFrame, the dataframe. Size 163065 rows x 12 columns.
+        - ``medical_charge`` : pd.DataFrame, the dataframe. Size 163065 rows x 12
+          columns.
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
           labels. Size 163065 rows x 11 columns.
         - ``y`` : pd.DataFrame, target labels. Size 163065 rows x 1 column.
-        - ``metadata`` : a dictionary containing the name, description, source and target
+        - ``metadata`` : a dictionary containing the name, description, source and
+          target
     """
     return load_simple_dataset("medical_charge", data_home)
 
@@ -118,7 +122,8 @@ def fetch_midwest_survey(data_home=None):
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
           labels. Size 2494 rows x 28 columns.
         - ``y`` : pd.DataFrame, target labels. Size 2494 rows x 1 column.
-        - ``metadata`` : a dictionary containing the name, description, source and target
+        - ``metadata`` : a dictionary containing the name, description, source and
+          target
     """
     return load_simple_dataset("midwest_survey", data_home)
 
@@ -177,7 +182,8 @@ def fetch_traffic_violations(data_home=None):
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
           labels. Size 1578154 rows x 42 columns.
         - ``y`` : pd.DataFrame, target labels. Size 1578154 rows x 1 column.
-        - ``metadata`` : a dictionary containing the name, description, source and target
+        - ``metadata`` : a dictionary containing the name, description, source and
+          target
     """
     return load_simple_dataset("traffic_violations", data_home)
 
@@ -200,11 +206,13 @@ def fetch_drug_directory(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - ``drug_directory`` : pd.DataFrame, the dataframe. Size 120215 rows x 21 columns.
+        - ``drug_directory`` : pd.DataFrame, the dataframe. Size 120215 rows x 21
+          columns.
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
           labels. Size 120215 rows x 20 columns.
         - ``y`` : pd.DataFrame, target labels. Size 120215 rows x 1 column.
-        - ``metadata`` : a dictionary containing the name, description, source and target
+        - ``metadata`` : a dictionary containing the name, description, source and
+          target
     """
     return load_simple_dataset("drug_directory", data_home)
 
@@ -238,9 +246,10 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
         - ``baskets`` : pd.DataFrame, table containing baskets ID and target. Size
           92790 rows x 2 columns.
-        - ``product`` : pd.DataFrame, table containing features about products contained in
-          baskets. Size 163357 rows x 7 columns.
-        - ``metadata`` : a dictionary containing the name, description, source and target
+        - ``product`` : pd.DataFrame, table containing features about products contained
+          in baskets. Size 163357 rows x 7 columns.
+        - ``metadata`` : a dictionary containing the name, description, source and
+          target
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -282,7 +291,8 @@ def fetch_toxicity(data_home=None):
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
           labels. Size 1000 rows x 1 columns.
         - ``y`` : pd.DataFrame, target labels. Size 1000 rows x 1 columns.
-        - ``metadata`` : a dictionary containing the name, description, source and target
+        - ``metadata`` : a dictionary containing the name, description, source and
+          target
     """
     return load_simple_dataset("toxicity", data_home)
 
@@ -345,8 +355,10 @@ def fetch_bike_sharing(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - ``bike_sharing``: pd.DataFrame, the full dataframe. Size 17379 rows x 11 columns.
-        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target labels. Size 17379 rows x 10 columns.
+        - ``bike_sharing``: pd.DataFrame, the full dataframe. Size 17379 rows x 11
+          columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target labels.
+          Size 17379 rows x 10 columns.
         - ``y`` : pd.DataFrame, target labels. Size 17379 rows x 1 column.
         - ``metadata`` : a dictionary containing the name and target
     """
@@ -359,7 +371,8 @@ def fetch_movielens(data_home=None):
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the goal is to predict movie ratings.
-    More details are provided in the output's ``metadata['description']``. Size on disk: 3.6Mo.
+    More details are provided in the output's ``metadata['description']``. Size on disk:
+        3.6Mo.
 
     Parameters
     ----------
@@ -385,7 +398,8 @@ def fetch_flight_delays(data_home=None):
     """Fetch the flight delays dataset (regression) available at \
         https://github.com/skrub-data/skrub-data-files
 
-    This is a regression use-case, where the goal is to predict flight delays. Size on disk: 657Mo.
+    This is a regression use-case, where the goal is to predict flight delays. Size on
+    disk: 657Mo.
 
     Parameters
     ----------
@@ -434,10 +448,12 @@ def fetch_country_happiness(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - ``happiness_report``: dataframe, data from the world happiness report. Size 146 rows x 12 columns.
+        - ``happiness_report``: dataframe, data from the world happiness report. Size
+          146 rows x 12 columns.
         - ``GDP_per_capita``: dataframe from the World Bank. Size 262 rows x 2 columns.
         - ``life_expectancy``: dataframe from the World Bank. Size 260 rows x 2 columns.
-        - ``legal_rights_index``: dataframe from the World Bank. Size 238 rows x 2 columns.
+        - ``legal_rights_index``: dataframe from the World Bank. Size 238 rows x 2
+          columns.
         - ``metadata`` : a dictionary containing the name of the dataset, a
           description and the sources.
     """
