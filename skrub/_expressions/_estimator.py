@@ -95,6 +95,11 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
     This class is not meant to be instantiated manually, ``SkrubPipeline``
     objects are created by calling :meth:`Expr.skb.get_pipeline()` on an
     expression.
+
+    Attributes
+    ----------
+    expr : skrub.Expr
+        The skrub expression evaluated by this pipeline.
     """
 
     def __init__(self, expr):
