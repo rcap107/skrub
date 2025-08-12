@@ -64,8 +64,7 @@ def test_drop(df_module):
     assert Drop().fit(col).transform(col) == []
 
 
-def test_get_feature_names_out(df_module):
-    df = df_module.example_dataframe
+def test_get_feature_names_out(df):
     select = SelectCols(cols=s.all()).fit(df)
     assert len(select.get_feature_names_out()) == ns.shape(df)[1]
 
