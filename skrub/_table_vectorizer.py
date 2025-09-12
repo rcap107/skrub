@@ -399,9 +399,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     .. note::
 
-        The ``specific_transformers`` parameter will be removed in a future
-        version of ``skrub``, when better utilities for building complex
-        pipelines are introduced.
+        .. deprecated:: 0.6.2
+        The ``specific_transformers`` parameter is deprecated and will be removed
+        in the next version of ``skrub``.
 
     Parameters
     ----------
@@ -662,16 +662,18 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     [array(['four', 'three'], dtype=object)]
 
     **Overriding the transformer for specific columns**
+    To
+
+    .. note::
+        .. deprecated:: 0.6.2
+        The ``specific_transformers`` parameter is deprecated. It is recommended
+        to use :class:`~skrub.ApplyToCols` instead.
+        This functionality will be removed in the next version of skrub.
 
     We can also provide transformers for specific columns. In that case the
     provided transformer has full control over the associated columns; no other
     processing is applied to those columns. A column cannot appear twice in the
     ``specific_transformers``.
-
-    .. note::
-
-        This functionality is likely to be removed in a future version of the
-        ``TableVectorizer``.
 
     The overrides are provided as a list of pairs:
     ``(transformer, list_of_column_names)``.
@@ -822,29 +824,30 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     def _check_specific_columns(self):
         specific_columns = {}
-        for i, config in enumerate(self.specific_transformers):
-            try:
-                _, cols = config
-                assert isinstance(cols, Iterable) and not isinstance(cols, str)
-            except (ValueError, TypeError, AssertionError):
-                raise ValueError(
-                    "'specific_transformers' must be a list of "
-                    "(transformer, list of columns) pairs. "
-                    f"Got {config!r} at index {i}."
-                )
-            for c in cols:
-                if not isinstance(c, str):
+        if self.specific_transformers:
+            for i, config in enumerate(self.specific_transformers):
+                try:
+                    _, cols = config
+                    assert isinstance(cols, Iterable) and not isinstance(cols, str)
+                except (ValueError, TypeError, AssertionError):
                     raise ValueError(
-                        "Column names in 'specific_transformers' must be strings,"
-                        f" got {c}"
+                        "'specific_transformers' must be a list of "
+                        "(transformer, list of columns) pairs. "
+                        f"Got {config!r} at index {i}."
                     )
-                if c in specific_columns:
-                    raise ValueError(
-                        f"Column {c!r} used twice in 'specific_transformers', "
-                        f"at indices {specific_columns[c]} and {i}."
-                    )
-            specific_columns.update({c: i for c in cols})
-        self._specific_columns = list(specific_columns.keys())
+                for c in cols:
+                    if not isinstance(c, str):
+                        raise ValueError(
+                            "Column names in 'specific_transformers' must be strings,"
+                            f" got {c}"
+                        )
+                    if c in specific_columns:
+                        raise ValueError(
+                            f"Column {c!r} used twice in 'specific_transformers', "
+                            f"at indices {specific_columns[c]} and {i}."
+                        )
+                specific_columns.update({c: i for c in cols})
+            self._specific_columns = list(specific_columns.keys())
 
     def _make_pipeline(self):
         def add_step(steps, transformer, cols, allow_reject=False):
