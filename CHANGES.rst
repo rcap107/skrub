@@ -6,25 +6,506 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing development
+Ongoing Development
 ===================
 
-Skrub is a very recent package.
-It is currently undergoing fast development and backward compatibility is not ensured.
+New features
+------------
+- A new dataset, :func:`fetch_california_housing`, has been added to the
+  :mod:`skrub.datasets` module. It allows to get a redundancy copy of the scikit-learn
+  :func:`fetch_california_housing` function.
+  :pr:`1830` by :user:`Guillaume Lemaitre <glemaitre>`.
+
+Changes
+-------
+
+Bugfixes
+--------
+- :class:`DropCols` and :class:`SelectCols:` attributes were renamed to end
+  with an underscore, in order to follow a scikit-learn convention which is
+  used to determine if an estimator is fitted. :pr:`1813` by :user:`Auguste
+  Baum <auguste-probabl>`.
+
+Release 0.7.0
+=============
+
+New features
+------------
+- It is now possible to tune the choices in a :class:`DataOp` with `Optuna
+  <https://optuna.readthedocs.io/en/stable/>`_. See
+  :ref:`example_optuna_choices` for an example.
+  :pr:`1661` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`DataOp.skb.apply` now allows passing extra named arguments to the
+  estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
+  etc. :pr:`1642` by :user:`Jérôme Dockès <jeromedockes>`.
+- TableReport now displays the mean statistic for boolean columns.
+  :pr:`1647` by :user:`Abdelhakim Benechehab <abenechehab>`.
+- :meth:`DataOp.skb.get_vars` allows inspecting all the variables, or all the
+  named dataops, in a :class:`DataOp`. This lets us easily know what keys should
+  be present in the ``environment`` dictionary we pass to
+  :meth:`DataOp.skb.eval` or to :meth:`SkrubLearner.fit`,
+  :meth:`SkrubLearner.predict`, etc.
+  :pr:`1646` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`DataOp.skb.iter_cv_splits` iterates over the training and testing
+  environments produced by a CV splitter -- similar to
+  :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
+  :pr:`1653` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`TableReport` now supports ``np.array``. :pr:`1676` by :user:`Nisma Amjad <Nismamjad1>`.
+- :meth:`DataOp.skb.full_report` now accepts a new parameter, ``title``, that is displayed
+  in the html report.
+  :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
+- :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
+  user select which tab should be opened when the ``TableReport`` is
+  rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Changes
+-------
+- The minimum supported version of Python has been increased to 3.10. Additionally,
+  the minimum supported versions of scikit-learn and requests are 1.4.2 and 2.27.1
+  respectively. Support for python 3.14 has been added.
+  :pr:`1572` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The :meth:`DataOp.skb.full_report` method now deletes reports created with
+  ``output_dir=None`` after 7 days. :pr:`1657` by :user:`Simon Dierickx <simon.dierickx>`.
+- The :func:`tabular_pipeline` uses a :class:`SquashingScaler` instead of a
+  :class:`StandardScaler` for centering and scaling numerical features
+  when linear models are used.
+  :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
+- The transformer :class:`ToFloat`, previously called ``ToFloat32``, is now public.
+  :pr:`1687` by :user:`Marie Sacksick <MarieSacksick>`.
+- Improved the error message raised when a Polars lazyframe is passed to
+  :class:`TableReport`, clarifying that ``.collect()`` must be called first.
+  :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`.
+- Computing the associations in :class:`TableReport` is now deterministic and can
+  be controlled by the new parameter ``subsampling_seed`` of the global configuration.
+  :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
+- Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
+  conversion of list/object-like columns to strings unless explicitly enabled.
+  :pr:`1789` by :user:`PilliSiddharth`.
+
+Bugfixes
+--------
+- The :meth:`skrub.cross_validate` function now raises a specific exception if the wrong variable
+  type is passed.
+  :pr:`1799` by :user:`Eloi Massoulié<emassoulie>`
+- Fixed various issues with some transformers by adding ``get_feature_names_out``
+  to all single column transformers.
+  :pr:`1666` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Issues occurring when :meth:`DataOp.skb.apply` was passed a DataOp as the
+  estimator have been fixed in :pr:`1671` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+- :class:`TableReport` could raise an error while trying to check if Polars
+  columns with some dtypes (lists, structs) are sorted. It would not indicate
+  Polars columns sorted in descending order. Fixed in :pr:`1673` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- Fixed nightly checks and added support for upcoming library versions, including Pandas
+  v3.0. :pr:`1664` by :user:`Auguste Baum <auguste-probabl>` and
+  :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed the use of :class:`TableReport` and :class:`Cleaner` with Polars dataframes
+  containing a column with empty string as name.
+  :pr:`1722` by :user:`Marie Sacksick <MarieSacksick>`.
+- Fixed an issue where :class:`TableReport` would fail when computing associations
+  for Polars dataframes if PyArrow was not installed.
+  :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed an issue in the Data Ops report generation in cases where the DataOp
+  contained escape characters or were spanning multiple lines.
+  :pr:`1764` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Added :meth:`get_feature_names_out` to :class:`Cleaner` for consistency with the
+  :class:`TableVectorizer` and other transformers. :pr:`1762` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+- Improve error message when :class:`TextEncoder` is used without the optional
+  transformers dependencies. :pr:`1769` by :user:`Fangxuan Zhou <fxzhou22>`.
+- Accessing ``.skb.applied_estimator`` on a :class:`DataOp` after calling
+  ``.skb.set_name()``, ``.skb.set_description()``, ``.skb.mark_as_X()`` or
+  ``.skb.mark_as_y()`` used to raise an error, this has been fixed in :pr:`1782`
+  by :user:`Jérôme Dockès <jeromedockes>`.
+- Fixed potential issues that could arise in :meth:`ParamSearch.plot_results`
+  when NaN values were present in the cross-validation results.
+  :pr:`1800` by :user:`Riccardo Cappuzzo <rcap107>`.
+
+Release 0.6.2
+=============
+
+New features
+------------
+- The :meth:`DataOp.skb.full_report` now displays the time each node took to
+  evaluate. :pr:`1596` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Changes
+-------
+- Ken embeddings are now deprecated, the functions :func:`datasets.get_ken_embeddings`,
+  :func:`datasets.get_ken_table_aliases`, and :func:`datasets.get_ken_types` will be
+  removed in the next release of skrub.
+  :pr:`1546` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+- Improved error messages when a DataOp is being sent to dispatched functions.
+  :pr:`1607` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The accepted values for the parameter ``how`` of :meth:`DataOp.skb.apply` have
+  changed. The new values are ``"auto"`` (unchanged), ``"cols"`` to wrap the
+  transformer in :class:`ApplyToCols`, ``"frame"`` to wrap the transformer in
+  :class:`ApplyToFrame`, or ``"no_wrap"`` for no wrapping. The old values are
+  deprecated and will result in an error in a future release.
+  :pr:`1628` by :user:`Jérôme Dockès <jeromedockes>`.
+- The parameter ``splitter`` of :meth:`DataOp.skb.train_test_split` has been
+  renamed ``split_func``. :pr:`1630` by :user:`Jérôme Dockès <jeromedockes>`.
+- KEN embeddings and all the relevant functions have been removed from skrub.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The objects ``tabular_learner`` and ``DropIfTooManyNulls`` were removed. Use
+  :func:`tabular_pipeline` and :class:`DropUninformative` instead.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The skrub global configuration now includes a parameter for setting the default
+  verbosity of the :class:`TableReport`.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Bugfixes
+--------
+
+- Fixed a compatibility bug with Polars 1.32.3 that may cause `ToFloat32` to fail
+  when applied to categorical columns. :pr:`1570` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Fixed the display of DataOp objects in google colab cell outputs (no output
+  was displayed). :pr:`1590` by :user:`Jérôme Dockès <jeromedockes>`.
+- Fixed an error that occurred when using ``.skb.concat`` with a pandas dataframe
+  with column names that aren't strings. :pr:`1594` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Fixed the range from which :func:`choose_float` and :func:`choose_int` sample
+  values when ``log=False`` and ``n_steps`` is ``None``. It was between ``low``
+  and ``low + high``, now it is between ``low`` and ``high``. :pr:`1603` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- DataOp hyperparameter search would raise an error when doing classification
+  and using the ``scoring`` parameter, when the dataop contained no variables.
+  Fixed in :pr:`1601` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`SkrubLearner` used to do a prediction on the train set during
+  ``fit()``, this has been fixed.
+  :pr:`1610` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`DataOp` would raise errors when containing subclasses of list, tuple
+  or dict that cannot be initialized with an instance of the builtin type (such
+  as classes created by ``collections.namedtuple``), this has been fixed.
+  DataOps now only recurse into the builtin collections to evaluate their items
+  (not into their subclasses). If you need the items evaluated (ie if they
+  contain DataOps or Choices), store them in one of the builtin collections.
+  :pr:`1612` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`SkrubLearner.report` with ``mode="fit"`` used to display the dataops
+  themselves, rather than their outputs, in the report. This has been fixed in
+  :pr:`1623` by :user:`Jérôme Dockès <jeromedockes>`.
+- Fixed a bug that happened when ``get_feature_names_out`` was called on instances
+  of the :class:`DatetimeEncoder`. :pr:`1622` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Release 0.6.1
+===================
+
+Bugfixes
+--------
+
+- ``get_feature_names_out`` now works correctly when used by :class:`GapEncoder`,
+  :class:`DropCols`, :class:`SelectCols:` from within a scikit-learn ``Pipeline``. In
+  addition, :class:`DropCols`'s ``get_feature_names_out`` method now returns the
+  names of the columns that are not dropped, rather than the names of the columns
+  that are dropped. :pr:`1543` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+
+Release 0.6.0
+=============
+
+Highlights
+----------
+- Major feature! Skrub DataOps are a powerful new way of
+  combining dataframe transformations over multiple tables, and machine learning
+  pipelines. DataOps can be combined to form compled data plans, that can be used
+  to train and tune machine learning models. Then, the DataOps plans can be exported
+  as ``Learners`` (:class:`skrub.SkrubLearner`), standalone objects that can be
+  used on new data. More detail about the DataOps can be found in the
+  :ref:`User guide <user_guide_data_ops_index>` and in the
+  :ref:`examples <data_ops_examples_ref>`.
+
+- The :class:`TableReport` has been improved with many new features. Series are
+  now supported directly. It is now
+  possible to skip computing column associations and generating plots when the
+  number of columns in the dataframe exceeds a user-defined threshold. Columns with
+  high cardinality and sorted columns are now highlighted in the report.
+
+- :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
+  providing utilities for selecting columns to which a transformer should be applied
+  in a flexible way. For more details, see the :ref:`User guide <user_guide_selectors>`
+  and the :ref:`example <sphx_glr_auto_examples_0090_apply_to_cols.py>`.
+
+- The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
+  clips numeric columns, enabling more robust handling of numeric columns
+  with neural networks. See the :ref:`example <sphx_glr_auto_examples_0100_squashing_scaler.py>`
 
 New features
 ------------
 
+- The Skrub DataOps are new mechanism for building machine-learning
+  pipelines that handle multiple tables and easily describing their
+  hyperparameter spaces. Main PR: :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`.
+  Additional work from other contributors can be found
+  `here <https://github.com/skrub-data/skrub/issues?q=merged%3A%3C2025-07-24%20label%3Adata_ops>`_:
+  :user:`Vincent Maladiere <Vincent-Maladiere>` provided very important help by
+  trying the DataOps on many use-cases and datasets, providing feedback and
+  suggesting improvements, improving the examples (including creating all the
+  figures in the examples) and adding jitter to the parallel coordinate plots,
+  :user:`Riccardo Cappuzzo<rcap107>` experimented with the DataOps,
+  suggested improvements and improved the examples, :user:`Gaël Varoquaux
+  <gaelvaroquaux>` , :user:`Guillaume Lemaitre <glemaitre>`, :user:`Adrin Jalali
+  <adrinjalali>`, :user:`Olivier Grisel <ogrisel>` and others participated
+  through many discussions in defining the requirements and the public API.
+  See :ref:`the examples <data_ops_examples_ref>` for
+  an introduction.
+
+- The :mod:`selectors` module provides utilities for selecting columns to which
+  a transformer should be applied in a flexible way. The module was created in
+  :pr:`895` by :user:`Jérôme Dockès <jeromedockes>` and added to the public API
+  in :pr:`1341` by :user:`Jérôme Dockès <jeromedockes>`.
+
+- The :class:`DropUninformative` transformer is now available. This transformer
+  employs different heuristics to detect columns that are not likely to bring
+  useful information for training a model.
+  The current implementation includes detection of columns that contain only a
+  single value (constant columns), only missing values, or all unique values (such
+  as IDs). :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- :func:`get_config`, :func:`set_config` and :func:`config_context` are now available
+  to configure settings for dataframes display and expressions. :func:`patch_display`
+  and :func:`unpatch_display` are deprecated and will be removed in the next release
+  of skrub. :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+  The global configuration includes the parameter ``cardinality_threshold`` that
+  controls the threshold value used to warn user if they have high cardinality
+  columns in their dataset. :pr:`1498` by :user:`rouk1 <rouk1>`.
+  Additionally, the parameter ``float_precision``
+  controls the number of significant digits displayed for floating-point values
+  in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
+
+- Added the :class:`SquashingScaler`, a transformer that
+  robustly rescales and smoothly clips numeric columns,
+  enabling more robust handling of numeric columns
+  with neural networks. :pr:`1310` by :user:`Vincent Maladiere <Vincent-Maladiere>` and
+  :user:`David Holzmüller <dholzmueller>`.
+
+- :func:`datasets.toy_order` is now available to create a toy dataframe and
+  corresponding targets for examples.
+  :pr:`1485` by :user:`Antoine Canaguier-Durand <canag>`.
+
+- :class:`ApplyToCols` and :class:`ApplyToFrame` are now available to apply transformers
+  on a set of columns independently and jointly respectively.
+  :pr:`1478` by :user:`Vincent Maladiere<Vincent-Maladiere>`.
+
 
 Changes
 -------
-* A new parameter `verbose` has been added to the :class:`TableReport` to toggle on or off the
-  printing of progress information when a report is being generated.
-  :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.
+.. warning::
+  The default high cardinality encoder for both :class:`TableVectorizer` and
+  :meth:`tabular_learner` (now :meth:`tabular_pipeline`) has been changed from
+  :class:`GapEncoder` to :class:`StringEncoder`. :pr:`1354` by
+  :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The ``tabular_learner`` function has been deprecated in favor of :func:`tabular_pipeline` to honor
+  its scikit-learn pipeline cultural heritage, and remove the ambiguity with the data
+  ops Learner. :pr:`1493` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- :class:`StringEncoder` now exposes the ``stop_words`` argument, which is passed to the
+  underlying vectorizer (:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
+  or :class:`~sklearn.feature_extraction.text.HashingVectorizer`). :pr:`1415` by
+  :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- A new parameter ``max_association_columns`` has been added to the
+  :class:`TableReport` to skip association computation when the number of columns
+  exceeds the specified value. :pr:`1304` by :user:`Victoria Shevchenko <victoris93>`.
+
+- The `packaging` dependency was removed.
+  :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+- :class:`TextEncoder`, :class:`StringEncoder` and :class:`GapEncoder` now compute the
+  total standard deviation norm during training, which is a global constant, and
+  normalize the vector outputs by performing element-wise division on all entries.
+  :pr:`1274` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- The :class:`DropIfTooManyNulls` transformer has been replaced by the
+  :class:`DropUninformative` transformer and will be removed in a future release.
+  :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`
+
+- The :func:`concat_horizontal` function was replaced with :func:`concat`. Horizontal or vertical concatenation
+  is now controlled by the `axis` parameter. :pr:`1334` by :user:`Parasa V Prajwal <pvprajwal>`.
+
+- The :class:`TableVectorizer` and :class:`Cleaner` now accept a `datetime_format`
+  parameter for specifying the format to use when parsing datetime columns.
+  :pr:`1358` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The :class:`SimpleCleaner` has been removed. use :class:`Cleaner` instead. :pr:`1370` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The periodic encoding for the ``day_in_year`` has been removed from the :class:`DatetimeEncoder` as it was
+  redundant. The feature itself is still added if the flag is set to ``True``. :pr:`1396` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The naming scheme used for the features generated by :class:`TextEncoder`, :class:`StringEncoder`, :class:`MinHashEncoder`,
+  :class:`DatetimeEncoder` has been standardized. Now features generated by all encoders have indices in the range
+  ``[0, n_components-1]``, rather than ``[1, n_components]``. Additionally, columns with empty name are assigned a default
+  name that depends on the encoder used. :pr:`1405` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The optional dependencies 'dev', 'doc', 'lint' and 'test' have been coalesced into
+  'dev'. :pr:`1404` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- The :class:`TableReport` now supports Series in addition to Dataframes. :pr:`1420` by :user:`Vitor Pohlenz<vitorpohlenz>`.
+
+- The :class:`Cleaner` now exposes a parameter to convert numeric values to float32. :pr:`1440` by
+  :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The :class:`TableReport` now shows if columns are sorted. :pr:`1512` by :user:`Dea María Léon<DeaMariaLeon>`.
+
+
+Bugfixes
+--------
+- Fixed a bug that caused the :class:`StringEncoder` and :class:`TextEncoder` to raise an exception if the
+  input column was a Categorical datatype. :pr:`1401` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Documentation
+-------------
+A large number of improvements to the examples, docstrings, and the documentation
+website have been made. Contributors include :user:`Vincent Maladiere <Vincent-Maladiere>`,
+:user:`Riccardo Cappuzzo<rcap107>`, :user:`Jérôme Dockès <jeromedockes>`,
+:user:`Gael Varoquaux <gaelvaroquaux>`, :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`,
+:user:`Sylvain Combettes <sylvaincom>`, :user:`Frits Hermans <fritshermans>`,
+:user:`Vitor Pohlenz <vitorpohlenz>`, :user:`Arturo Amor Quiroz <ArturoAmorQ>`,
+:user:`Marie Sacksick <MarieSacksick>`, :user:`Emilien Battel <emilienbattel09>`,
+:user:`George El Haber <gmhaber>`, :user:`Antoine Canaguier-Durand <canag>`, and
+:user:`Lionel Kusch <lionelkusch>`.
+
+
+Release 0.5.4
+=============
+
+Maintenance
+-----------
+* Make ``skrub`` compatible with scikit-learn 1.7.
+  :pr:`1434` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+
+Release 0.5.3
+=============
+
+Changes
+-------
+
+- The :class:`SimpleCleaner` has been renamed to :class:`Cleaner`. Use of the
+  name :class:`SimpleCleaner` is deprecated and will result in an error in some
+  future release of skrub. :pr:`1275` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- A new parameter ``max_plot_columns`` has been added to the
+  :class:`TableReport` and :func:`patch_display` to skip column plots when the
+  number of columns exceeds the specified value. :pr:`1255` by :user:`Priscilla
+  Baah<priscilla-b>`.
+
+
+Release 0.5.2
+=============
+
+New features
+------------
+
+- The :class:`TableReport` now switches its visual theme between light and dark according to the user preferences.
+  :pr:`1201` by :user:`rouk1 <rouk1>`.
+
+- Adding a new way to control the location of the data directory, using envar ``SKRUB_DATA_DIRECTORY``.
+  :pr:`1215` by :user:`Thomas S. <thomass-dev>`
+
+- The :class:`DatetimeEncoder` now supports periodic encoding of datetime features
+  with trigonometric functions and B-splines transformers.
+  :pr:`1235` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The :class:`TableReport` now also compute Pearson's correlation for numeric values.
+  :pr:`1203` by :user:`Reshama Shaikh <reshamas>` and
+  :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- The :class:`SimpleCleaner` is now available (⚠️ it was renamed to
+  :class:`Cleaner` in skrub ``0.5.3``.). This transformer is a lightweight
+  pre-processor that applies some of the transformations applied by the
+  :class:`TableVectorizer`, with a simpler interface. :pr:`1266` by
+  :user:`Riccardo Cappuzzo<rcap107>` and :user:`Jerome Dockes <jeromedockes>` .
+
+Changes
+-------
+
+- The estimator returned by :func:`tabular_learner` now uses spline encoding of
+  datetime features when the supervised learner is not a model based on decision
+  trees such as random forests or gradient boosting. :pr:`1264` by
+  :user:`Guillaume Lemaitre <glemaitre>`.
+
+- The "distribution" tab of the ``TableReport`` now stacks cards horizontally to avoid adding
+  vertical space.
+  :pr:`1259` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+- Progress messages when generating a ``TableReport`` are now written to stderr instead of stdout.
+  :pr:`1236` by :user:`Priscilla Baah<priscilla-b>`
+
+- Optimize the :class:`StringEncoder`: lower memory footprint and faster execution in some cases.
+  :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+Bug fixes
+---------
+- :class:`StringEncoder` now works correctly in presence of null values.
+  :pr:`1224` by :user:`Jérôme Dockès <jeromedockes>`.
+
+- The :meth:`TableVectorizer.get_feature_names_out` method now works when used in a
+  scikit-learn pipeline by exposing the `input_features` parameter.
+  :pr:`1258` by :user:`Guillaume Lemaitre <glemaitre>`.
+
+
+Release 0.5.1
+=============
+
+New features
+------------
+* The :class:`StringEncoder` encodes strings using tf-idf and truncated SVD
+  decomposition and provides a cheaper alternative to :class:`GapEncoder`.
+  :pr:`1159` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Changes
+-------
+* New dataset fetching methods have been added: :func:`fetch_videogame_sales`,
+  :func:`fetch_bike_sharing`, :func:`fetch_flight_delays`,
+  :func:`fetch_country_happiness`, and removed :func:`fetch_road_safety`.
+  :pr:`1218` by :user:`Vincent Maladiere <Vincent-Maladiere>`
 
 Bug fixes
 ---------
 
+Maintenance
+-----------
+
+Release 0.4.1
+=============
+
+Changes
+-------
+
+* :class:`TableReport` has `write_html` method. :pr:`1190` by :user:`Mojdeh Rastgoo<mrastgoo>`.
+
+* A new parameter ``verbose`` has been added to the :class:`TableReport` to toggle on or off the
+  printing of progress information when a report is being generated.
+  :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.
+
+* A parameter ``verbose`` has been added to the :func:`patch_display` to toggle on or off the
+  printing of progress information when a table report is being generated.
+  :pr:`1188` by :user:`Priscilla Baah<priscilla-b>`.
+
+* :func:`tabular_learner` accepts the alias ``"regression"`` for the option
+  ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+  :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
+
+Bug fixes
+---------
+* Generating a ``TableReport`` could have an effect on the matplotib
+  configuration which could cause plots not to display inline in jupyter
+  notebooks any more. This has been fixed in skrub in :pr:`1172` by
+  :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
+  `here <https://github.com/matplotlib/matplotlib/issues/25041>`_.
+
+* The labels on bar plots in the ``TableReport`` for columns of object dtypes
+  that have a repr spanning multiple lines could be unreadable. This has been
+  fixed in :pr:`1196` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Improve the performance of :func:`deduplicate` by removing some unnecessary
+  computations. :pr:`1193` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Maintenance
+-----------
+* Make ``skrub`` compatible with scikit-learn 1.6.
+  :pr:`1169` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 Release 0.4.0
 =============
@@ -460,7 +941,7 @@ Minor changes
   - `check_is_fitted` now looks at `"transformers_"` rather than `"columns_"`
   - the default of the `remainder` parameter in the docstring is now `"passthrough"`
     instead of `"drop"` to match the implementation.
-  - uint8 and int8 dtypes are now considered as numerical columns.
+  - uint8 and int8 dtypes are now considered as numeric columns.
 
 * Removed the leading "<" and trailing ">" symbols from KEN entities
   and types.
@@ -510,10 +991,10 @@ Dirty-cat release 0.4.1
 
 Major changes
 -------------
-* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on numerical columns based on the euclidean distance.
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on numeric columns based on the euclidean distance.
   :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* :func:`fuzzy_join` and :class:`FeatureAugmenter` can perform many-to-many joins on lists of numerical or string key columns.
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can perform many-to-many joins on lists of numeric or string key columns.
   :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * :func:`GapEncoder.transform` will not continue fitting of the instance anymore.
@@ -603,7 +1084,7 @@ Dirty-cat Release 0.3.0
 Major changes
 -------------
 
-* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical columns
+* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numeric columns
   (year, month, day, hour, minute, second, ...). It is now the default transformer used
   in the :class:`TableVectorizer` for datetime columns. :pr:`239` by :user:`Leo Grinsztajn <LeoGrin>`
 

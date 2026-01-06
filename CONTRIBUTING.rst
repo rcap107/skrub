@@ -1,3 +1,5 @@
+.. _contributing:
+
 Contributing to skrub
 =====================
 
@@ -58,6 +60,15 @@ To help us resolve the issue quickly, please include:
 - Any **additional details** where the bug might occur or doesn't occur unexpectedly.
 - A **code snippet** that reproduces the issue, if applicable.
 - **Version information** for Python, skrub, and relevant dependencies (e.g., scikit-learn, numpy, pandas).
+
+How to write an example?
+^^^^^^^^^^^^^^^^^^^^^^^^^
+We highly encourage contributors to add examples to the documentation
+when they add new features, or if they have a use case that is not yet covered
+in the documentation.
+
+You can find a guide on how to write examples in the :ref:`example guide <tutorial_write_example>`.
+
 
 Suggesting enhancements
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,15 +135,26 @@ See the relevant sections above on how to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Follow the steps in the :ref:`installation_instructions` > "From Source" section
-to set up your environment, install the required development dependencies, and
-run the tests.
+To setup your development environment, you need to follow the steps in "From Source" tab
+present in :ref:`Installing from source<installing_from_source>` page.
+After that, you can return to this page to continue.
 
-When starting to work on a new issue, it's recommended to create a new branch:
+Now that the development environment is ready, you may create a new branch and start working on
+the new issue.
 
-.. code:: console
+.. code:: sh
 
-   git switch -c branch_name
+   # fetch latest updates and start from the current head
+   git fetch upstream
+   git checkout -b my-branch-name-eg-fix-issue-123
+   # make some changes
+   git add ./the/file-i-changed
+   git commit -m "my message"
+   git push --set-upstream origin my-branch-name-eg-fix-issue-123
+
+At this point, if you visit again the `pull requests
+page <https://github.com/skrub-data/skrub/pulls>`__ github should show a
+banner asking if you want to open a pull request from your new branch.
 
 
 .. _implementation guidelines:
@@ -183,7 +205,8 @@ Additionally, you might have updated the internal dataframe API in
 ``skrub/_dataframe/tests/test_common.py`` to add a test for the
 ``amazing_function``.
 
-Run each updated test file using ``pytest``:
+Run each updated test file using ``pytest``
+(`pytest docs <https://docs.pytest.org/en/stable>`_):
 
 .. code:: sh
 
@@ -193,10 +216,20 @@ Run each updated test file using ``pytest``:
 
 The ``-vsl`` flag provides more information when running the tests.
 
+It is also possible to run a specific test, or set of tests using the
+commands ``pytest the_file.py::the_test``, or
+``pytest the_file.py -k 'test_name_pattern'``. This is helpful to avoid
+having to run all the tests.
+
+If you work on Windows, you might have some issues with the working
+directory if you use ``pytest``, while ``python -m pytest ...`` should
+be more robust.
+
 Once you are satisfied with your changes, you can run all the tests to make sure
 that your change did not break code elsewhere:
 
 .. code:: sh
+
     pytest -s skrub/tests
 
 Finally, sync your changes with the remote repository and wait for CI to run.
@@ -229,6 +262,21 @@ the docstrings. Check for possible problems by running
 
    pytest skrub/path/to/file
 
+
+Formatting and pre-commit checks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Formatting the code well helps with code development and maintenance,
+which why is skrub requires that all commits follow a specific set of
+formatting rules to ensure code quality.
+
+Luckily, these checks are performed automatically by the ``pre-commit``
+tool (`pre-commit docs <https://pre-commit.com>`__) before any commit
+can be pushed. Something worth noting is that if the ``pre-commit``
+hooks format some files, the commit will be canceled: you will have to
+stage the changes made by ``pre-commit`` and commit again.
+
+
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -237,17 +285,10 @@ a PR by clicking the "Compare & pull request" button on GitHub,
 targeting the skrub repository.
 
 
-Integration
-^^^^^^^^^^^
-
-Community consensus is key in the integration process. Expect a minimum
-of 1 to 3 reviews depending on the size of the change before we consider
-merging the PR.
-
-Please be mindful that maintainers are volunteers, so review times may vary.
-
 Continuous Integration (CI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+After creating your PR, CI tools will run proceed to run all the tests on all
+configurations supported by skrub.
 
 - **Github Actions**:
   Used for testing skrub across various platforms (Linux, macOS, Windows)
@@ -273,18 +314,30 @@ actions are taken.
 Note that by default the documentation is built, but only the examples that are
 directly modified by the pull request are executed.
 
-- If the remote repository was changed, you might need to run
-  ``pre-commit run --all-files`` to make sure that the formatting is
-  correct.
-- If a specific test environment fails, it is possible to run the tests
-  in the environment that is failing by using pixi. For example if the
-  env is ``ci-py309-min-optional-deps``, it is possible to replicate it
-  using the following command:
+CI is testing all possible configurations supported by skrub, so tests may fail
+with configurations different from what you are developing with. If this is the
+case,  it is possible to run the tests in the environment that is failing by
+using `pixi <https://pixi.sh/latest/>`_. For example if the env is ``ci-py309-min-optional-deps``, it is
+possible to replicate it using the following command:
 
 .. code:: sh
 
    pixi run -e ci-py309-min-optional-deps  pytest skrub/tests/path/to/test
 
+This command downloads the specific environment on the machine, so you can test
+it locally and apply fixes, or have a clearer idea of where the code is failing
+to discuss with the maintainers.
+
+Finally, if the remote repository was changed, you might need to run
+  ``pre-commit run --all-files`` to make sure that the formatting is
+  correct.
+
+Integration
+^^^^^^^^^^^
+
+Community consensus is key in the integration process. Expect a minimum
+of 1 to 3 reviews depending on the size of the change before we consider
+merging the PR.
 
 
 Building the documentation
@@ -299,13 +352,6 @@ and addressing any issues.**
 
 First, make sure you have properly installed the development version of skrub.
 You can follow the :ref:`installation_instructions` > "From source" section, if needed.
-
-Building the documentation requires installing some additional packages:
-
-.. code:: bash
-
-    cd skrub
-    pip install '.[doc]'
 
 To build the documentation, you need to be in the ``doc`` folder:
 
@@ -329,6 +375,60 @@ specific examples, you can use the following command with a regex pattern:
 
 .. code:: bash
 
-    make html EXAMPLES_PATTERN=your_regex_goes_here make html
+    make html EXAMPLES_PATTERN=your_regex_goes_here
 
 This is especially helpful when you're only modifying or checking a few examples.
+
+It is also possible to build the documentation without running the examples
+without running the examples by using the following command:
+
+.. code:: bash
+
+    make html-noplot
+
+This command generates the documentation without re-executing the examples, which can
+take a long time. This is useful if you are only modifying the documentation itself, such as fixing
+typos or improving explanations.
+
+
+
+**Using pixi**
+
+You can download and install pixi from `here <https://pixi.sh/latest/>`_.
+
+From the repository root:
+
+.. code:: bash
+
+    # Build documentation without running examples (faster)
+    pixi run build-doc-quick
+
+    # Build the full documentation, including examples
+    pixi run build-doc
+
+    # Clean previously built documentation
+    pixi run clean-doc
+
+The documentation will be generated in the ``doc/_build/html/`` directory.
+You can view it by opening the local ``doc/_build/html/index.html`` file.
+
+.. warning::
+
+   On Intel-based macOS systems (``osx-64``), some pixi environments may not
+   resolve correctly due to missing upstream package builds (e.g., for PyTorch).
+   If you encounter issues, you can always fall back to using ``make`` as
+   described above.
+
+
+Editing the API reference documentation
+---------------------------------------
+
+To add a new entry to the :ref:`API reference documentation<api_ref>` or change its
+content, head to ``doc/api_reference.py``. This data is then used by ``doc/conf.py``
+to render templates located at ``doc/reference/*.rst.template``.
+
+|
+
+Note that **all public functions and classes must be documented in the API
+reference**, hence when adding a public function or class, a new entry must be
+added, as detailed just above.

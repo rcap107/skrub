@@ -5,8 +5,10 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub import column_associations
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
+@skip_polars_installed_without_pyarrow
 def test_column_associations(df_module):
     x = (np.ones((7, 3)) * np.arange(3)).ravel()
     y = 2 - 3 * x
@@ -21,8 +23,12 @@ def test_column_associations(df_module):
     assert sbd.to_list(sbd.col(asso, "cramer_v")) == pytest.approx(
         [1.0, 0.6546536, 0.6546536]
     )
+    assert sbd.to_list(sbd.col(asso, "pearson_corr")) == pytest.approx(
+        [-1.0, -0.13484, 0.13484]
+    )
 
 
+@skip_polars_installed_without_pyarrow
 def test_infinite(df_module):
     # non-regression test for https://github.com/skrub-data/skrub/issues/1133
     # (column associations would raise an exception on low-cardinality float

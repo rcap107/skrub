@@ -4,6 +4,7 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub._check_input import CheckInputDataFrame
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
 def test_good_input(df_module):
@@ -38,6 +39,7 @@ def test_input_is_an_array():
         check.fit_transform(np.ones((2,)))
 
 
+@skip_polars_installed_without_pyarrow
 def test_wrong_dataframe_library_in_transform():
     pl = pytest.importorskip("polars")
     df = pl.DataFrame({"a": [0, 1], "b": [10, 20]})
@@ -53,7 +55,7 @@ def test_column_names_to_unique_strings():
     df = pd.DataFrame(np.ones((2, 4)), columns=["a", 0, "0", "a"])
     assert df.columns.tolist() == ["a", 0, "0", "a"]
     check = CheckInputDataFrame()
-    with pytest.warns(UserWarning, match="Some column names are not strings"):
+    with pytest.warns(UserWarning, match="Some dataframe column names are not strings"):
         with pytest.warns(UserWarning, match="Found duplicated column names"):
             out = check.fit_transform(df)
     assert out.shape == (2, 4)

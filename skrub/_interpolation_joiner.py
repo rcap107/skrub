@@ -7,12 +7,12 @@ from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
 )
-from sklearn.utils._tags import _safe_tags
 
 from . import _dataframe as sbd
 from . import _join_utils, _utils
-from . import _selectors as s
+from . import selectors as s
 from ._minhash_encoder import MinHashEncoder
+from ._sklearn_compat import get_tags
 from ._table_vectorizer import TableVectorizer
 
 DEFAULT_REGRESSOR = HistGradientBoostingRegressor()
@@ -315,7 +315,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             )
             for df in predictions
         ]
-        return sbd.concat_horizontal(main_table, *predictions)
+        return sbd.concat(main_table, *predictions, axis=1)
 
     def _check_prediction_results(self, main_table, results):
         checked_results = []
@@ -403,7 +403,7 @@ def _get_assignments_for_estimator(table, estimator):
 
 
 def _handles_multioutput(estimator):
-    return _safe_tags(estimator).get("multioutput", False)
+    return get_tags(estimator).target_tags.multi_output
 
 
 def _fit(key_values, target_table, estimator, propagate_exceptions):

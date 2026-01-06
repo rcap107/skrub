@@ -3,7 +3,6 @@ Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
 which encodes similarity instead of equality of values.
 """
 
-
 import numpy as np
 import pandas as pd
 import sklearn
@@ -14,6 +13,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
+from ._sklearn_compat import _check_n_features
 from ._string_distances import get_ngram_count, preprocess
 
 # Ignore lines too long, first docstring lines can't be cut
@@ -88,8 +88,8 @@ def ngram_similarity_matrix(
     """
     min_n, max_n = ngram_range
     unq_X = np.unique(X)
-    cats = np.array([" %s " % cat for cat in cats])
-    unq_X_ = np.array([" %s " % x for x in unq_X])
+    cats = np.array([f" {cat} " for cat in cats])
+    unq_X_ = np.array([f" {x} " for x in unq_X])
     if not hashing_dim:
         vectorizer = CountVectorizer(
             analyzer=analyzer, ngram_range=(min_n, max_n), dtype=dtype
@@ -334,7 +334,7 @@ class SimilarityEncoder(OneHotEncoder):
                     X[mask] = self.handle_missing
 
         Xlist, n_samples, n_features = self._check_X(X)
-        self._check_n_features(X, reset=True)
+        _check_n_features(self, X, reset=True)
 
         if self.handle_unknown not in ["error", "ignore"]:
             raise ValueError(
@@ -453,7 +453,7 @@ class SimilarityEncoder(OneHotEncoder):
                     X[mask] = self.handle_missing
 
         Xlist, n_samples, n_features = self._check_X(X)
-        self._check_n_features(X, reset=False)
+        _check_n_features(self, X, reset=False)
 
         for i in range(n_features):
             Xi = Xlist[i]
@@ -562,3 +562,10 @@ class SimilarityEncoder(OneHotEncoder):
                 "check_estimators_dtypes": "We only support string dtypes.",
             },
         }
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.categorical = True
+        tags.input_tags.string = True
+        tags.transformer_tags.preserves_dtype = []
+        return tags

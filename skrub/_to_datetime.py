@@ -6,9 +6,9 @@ from pandas._libs.tslibs.parsing import (
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors as s
-from ._dispatch import dispatch
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from . import selectors as s
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._wrap_transformer import wrap_transformer
 
 __all__ = ["ToDatetime", "to_datetime"]
@@ -18,7 +18,7 @@ _SAMPLE_SIZE = 30
 
 @dispatch
 def _get_time_zone(col):
-    raise NotImplementedError()
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_get_time_zone.specialize("pandas", argument_type="Column")
@@ -28,6 +28,8 @@ def _get_time_zone_pandas(col):
         return None
     if hasattr(tz, "zone"):
         return tz.zone
+    if hasattr(tz, "key"):
+        return tz.key
     return tz.tzname(None)
 
 
@@ -42,7 +44,7 @@ def _get_time_zone_polars(col):
 
 @dispatch
 def _convert_time_zone(col, time_zone):
-    raise NotImplementedError()
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_convert_time_zone.specialize("pandas", argument_type="Column")
@@ -83,15 +85,9 @@ class ToDatetime(SingleColumnTransformer):
     """
     Parse datetimes represented as strings and return ``Datetime`` columns.
 
-    An input column is converted to a column with dtype Datetime if possible,
-    and rejected by raising a ``RejectColumn`` exception otherwise. Only Date,
-    Datetime, String, and pandas object columns are handled, other dtypes are
-    rejected with ``RejectColumn``.
-
-    Once a column is accepted, outputs of ``transform`` always have the same
-    Datetime dtype (including resolution and time zone). Once the transformer
-    is fitted, entries that fail to be converted during subsequent calls to
-    ``transform`` are replaced with nulls.
+    This transformer tries to convert the given column from string to datetime,
+    by either testing common datetime formats or using the ``format`` specified
+    by the user. Columns that are not strings, dates or datetimes raise an exception.
 
     Parameters
     ----------
@@ -125,6 +121,18 @@ class ToDatetime(SingleColumnTransformer):
         is ``None``; otherwise it is the name of the time zone such as ``UTC`` or
         ``Europe/Paris``.
 
+    Notes
+    -----
+    An input column is converted to a column with dtype Datetime if possible,
+    and rejected by raising a ``RejectColumn`` exception otherwise. Only Date,
+    Datetime, String, and pandas object columns are handled, other dtypes are
+    rejected with ``RejectColumn``.
+
+    Once a column is accepted, outputs of ``transform`` always have the same
+    Datetime dtype (including resolution and time zone). Once the transformer
+    is fitted, entries that fail to be converted during subsequent calls to
+    ``transform`` are replaced with nulls.
+
     Examples
     --------
     >>> import pandas as pd
@@ -132,18 +140,18 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["2024-05-05T13:17:52", None, "2024-05-07T13:17:52"], name="when")
     >>> s
     0    2024-05-05T13:17:52
-    1                   None
+    1                    ...
     2    2024-05-07T13:17:52
-    Name: when, dtype: object
+    Name: when, dtype: ...
 
-    >>> from skrub._to_datetime import ToDatetime
+    >>> from skrub import ToDatetime
 
     >>> to_dt = ToDatetime()
     >>> to_dt.fit_transform(s)
     0   2024-05-05 13:17:52
     1                   NaT
     2   2024-05-07 13:17:52
-    Name: when, dtype: datetime64[ns]
+    Name: when, dtype: datetime64[...]
 
     The attributes ``format_``, ``output_dtype_``, ``output_time_zone_``
     record information about the conversion result.
@@ -151,7 +159,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.format_
     '%Y-%m-%dT%H:%M:%S'
     >>> to_dt.output_dtype_
-    dtype('<M8[ns]')
+    dtype('<M8[...]')
     >>> to_dt.output_time_zone_ is None
     True
 
@@ -162,12 +170,12 @@ class ToDatetime(SingleColumnTransformer):
     0   2024-05-05 13:17:52
     1                   NaT
     2   2024-05-07 13:17:52
-    Name: when, dtype: datetime64[ns]
+    Name: when, dtype: datetime64[...]
 
     >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
+    skrub._apply_to_cols.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
 
     Columns that already have ``Datetime`` ``dtype`` are not modified (but
     they are accepted); for those columns the provided format, if any, is ignored.
@@ -177,7 +185,7 @@ class ToDatetime(SingleColumnTransformer):
     0   2024-05-05 13:17:52+02:00
     1                         NaT
     2   2024-05-07 13:17:52+02:00
-    Name: when, dtype: datetime64[ns, Europe/Paris]
+    Name: when, dtype: datetime64[..., Europe/Paris]
     >>> to_dt.fit_transform(s) is s
     True
 
@@ -186,7 +194,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.format_ is None
     True
     >>> to_dt.output_dtype_
-    datetime64[ns, Europe/Paris]
+    datetime64[..., Europe/Paris]
     >>> to_dt.output_time_zone_
     'Europe/Paris'
 
@@ -197,7 +205,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'year' does not contain strings.
+    skrub._apply_to_cols.RejectColumn: Column 'year' does not contain strings.
 
     String columns that do not appear to contain datetimes or for some other reason
     fail to be converted are also rejected.
@@ -206,7 +214,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Could not find a datetime format for column 'when'.
+    skrub._apply_to_cols.RejectColumn: Could not find a datetime format for column 'when'.
 
     Once ``ToDatetime`` was successfully fitted, ``transform`` will always try to
     parse datetimes with the same format and output the same ``dtype``. Entries that
@@ -218,13 +226,13 @@ class ToDatetime(SingleColumnTransformer):
     0   2024-05-05 13:17:52
     1                   NaT
     2   2024-05-07 13:17:52
-    Name: when, dtype: datetime64[ns]
+    Name: when, dtype: datetime64[...]
     >>> s = pd.Series(["05/05/2024", None, "07/05/2024"], name="when")
     >>> to_dt.transform(s)
     0   NaT
     1   NaT
     2   NaT
-    Name: when, dtype: datetime64[ns]
+    Name: when, dtype: datetime64[...]
 
     **Time zones**
 
@@ -235,7 +243,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     0   2020-01-01 02:00:00+00:00
     1   2020-01-01 01:00:00+00:00
-    dtype: datetime64[ns, UTC]
+    dtype: datetime64[..., UTC]
     >>> to_dt.format_
     '%Y-%m-%dT%H:%M:%S%z'
     >>> to_dt.output_time_zone_
@@ -247,7 +255,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     0   2020-01-01 04:00:00
     1   2020-01-01 04:00:00
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
     >>> to_dt.output_time_zone_ is None
     True
 
@@ -260,10 +268,10 @@ class ToDatetime(SingleColumnTransformer):
     >>> s_paris
     0   2024-05-07 14:24:49+02:00
     1   2024-05-06 14:24:49+02:00
-    dtype: datetime64[ns, Europe/Paris]
+    dtype: datetime64[..., Europe/Paris]
     >>> to_dt = ToDatetime().fit(s_paris)
     >>> to_dt.output_dtype_
-    datetime64[ns, Europe/Paris]
+    datetime64[..., Europe/Paris]
 
     Here our converter is set to output datetimes with nanosecond resolution,
     localized in "Europe/Paris".
@@ -274,7 +282,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s_london
     0   2024-05-07 13:24:49+01:00
     1   2024-05-06 13:24:49+01:00
-    dtype: datetime64[ns, Europe/London]
+    dtype: datetime64[..., Europe/London]
 
     Here the timezone is "Europe/London" and the times are offset by 1 hour. During
     ``transform`` datetimes will be converted to the original dtype and the
@@ -283,7 +291,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.transform(s_london)
     0   2024-05-07 14:24:49+02:00
     1   2024-05-06 14:24:49+02:00
-    dtype: datetime64[ns, Europe/Paris]
+    dtype: datetime64[..., Europe/Paris]
 
     Moreover, we may have to transform a timezone-naive column whereas the
     transformer was fitted on a timezone-aware column. Note that is somewhat a
@@ -294,7 +302,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s_naive
     0   2024-05-07 12:24:49
     1   2024-05-06 12:24:49
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
 
     In this case, we make the arbitrary choice to assume that the timezone-naive
     datetimes are in UTC.
@@ -302,7 +310,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.transform(s_naive)
     0   2024-05-07 14:24:49+02:00
     1   2024-05-06 14:24:49+02:00
-    dtype: datetime64[ns, Europe/Paris]
+    dtype: datetime64[..., Europe/Paris]
 
     Conversely, a transformer fitted on a timezone-naive column can convert
     timezone-aware columns. Here also, we assume the naive datetimes were in UTC.
@@ -311,7 +319,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.transform(s_london)
     0   2024-05-07 12:24:49
     1   2024-05-06 12:24:49
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
 
     **``%d/%m/%Y`` vs ``%m/%d/%Y``**
 
@@ -322,7 +330,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["05/23/2024"])
     >>> to_dt.fit_transform(s)
     0   2024-05-23
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
     >>> to_dt.format_
     '%m/%d/%Y'
 
@@ -332,7 +340,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["23/05/2024"])
     >>> to_dt.fit_transform(s)
     0   2024-05-23
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
     >>> to_dt.format_
     '%d/%m/%Y'
 
@@ -341,7 +349,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["03/05/2024"])
     >>> to_dt.fit_transform(s)
     0   2024-03-05
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
     >>> to_dt.format_
     '%m/%d/%Y'
 
@@ -371,6 +379,9 @@ class ToDatetime(SingleColumnTransformer):
             The input transformed to Datetime.
         """
         del y
+
+        self.all_outputs_ = [sbd.name(column)]
+
         if sbd.is_any_date(column):
             self.format_ = None
             self.output_dtype_ = sbd.dtype(column)
@@ -453,19 +464,28 @@ def _guess_datetime_format(column):
     return None
 
 
-@dispatch
 def to_datetime(data, format=None):
     """Convert DataFrame or column to Datetime dtype.
 
     Parameters
     ----------
-    data : dataframe or column
-        The dataframe or column to transform.
+    data : pandas or polars ``{DataFrame, Series}``
+        The dataframe or series to transform.
 
     format : str or None, optional, default=None
         Format string to use to parse datetime strings.
         See the reference documentation for format codes:
         https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes .
+
+    Returns
+    -------
+    output : pandas or polars {DataFrame, Series}.
+        The input transformed to Datetime.
+
+    See Also
+    --------
+    ToDatetime :
+        Parse datetimes represented as strings and return Datetime columns.
 
     Examples
     --------
@@ -481,22 +501,30 @@ def to_datetime(data, format=None):
     0  1 2021-02-01
     1  2 2021-02-21
     """  # noqa: E501
+    # Wrap _to_datetime to avoid duplicate Sphinx entry due to overloading with
+    # functools.singledispatch.
+    # TODO: remove when https://github.com/sphinx-doc/sphinx/issues/10359 is fixed.
+    return _to_datetime(data, format=format)
+
+
+@dispatch
+def _to_datetime(data, format=None):
     raise TypeError(
         "Input to skrub.to_datetime must be a pandas or polars Series or DataFrame."
         f" Got {type(data)}."
     )
 
 
-@to_datetime.specialize("pandas", argument_type="DataFrame")
-@to_datetime.specialize("polars", argument_type="DataFrame")
+@_to_datetime.specialize("pandas", argument_type="DataFrame")
+@_to_datetime.specialize("polars", argument_type="DataFrame")
 def _to_datetime_dataframe(df, format=None):
     return wrap_transformer(
         ToDatetime(format=format), s.all(), allow_reject=True
     ).fit_transform(df)
 
 
-@to_datetime.specialize("pandas", argument_type="Column")
-@to_datetime.specialize("polars", argument_type="Column")
+@_to_datetime.specialize("pandas", argument_type="Column")
+@_to_datetime.specialize("polars", argument_type="Column")
 def _to_datetime_column(column, format=None):
     try:
         result = ToDatetime(format=format).fit_transform(column)

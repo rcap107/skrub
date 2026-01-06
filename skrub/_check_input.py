@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -8,7 +9,13 @@ from . import _dataframe as sbd
 from . import _join_utils, _utils
 from ._dispatch import dispatch
 
-__all__ = ["CheckInputDataFrame"]
+__all__ = ["CheckInputDataFrame", "cast_column_names_to_strings"]
+
+
+def cast_column_names_to_strings(df):
+    if not sbd.is_dataframe(df):
+        return df
+    return sbd.set_column_names(df, _column_names_to_strings(sbd.column_names(df)))
 
 
 def _column_names_to_strings(column_names):
@@ -16,8 +23,9 @@ def _column_names_to_strings(column_names):
     if not non_string:
         return column_names
     warnings.warn(
-        f"Some column names are not strings: {non_string}. All column names"
-        " must be strings; converting to strings."
+        f"Some dataframe column names are not strings: {non_string}.\n"
+        "All dataframe column names must be strings in skrub pipelines; "
+        "converting to strings."
     )
     return list(map(str, column_names))
 
@@ -44,8 +52,6 @@ def _check_not_pandas_sparse(df):
 
 @_check_not_pandas_sparse.specialize("pandas", argument_type="DataFrame")
 def _check_not_pandas_sparse_pandas(df):
-    import pandas as pd
-
     sparse_cols = [
         col for col in df.columns if isinstance(df[col].dtype, pd.SparseDtype)
     ]

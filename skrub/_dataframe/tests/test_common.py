@@ -13,10 +13,13 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from packaging.version import parse
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
-from skrub import _selectors as s
+import skrub
+from skrub import selectors as s
 from skrub._dataframe import _common as ns
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
 def test_not_implemented():
@@ -33,13 +36,20 @@ def test_not_implemented():
         "copy_index",
         "index",
         "with_columns",
+        "select_rows",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
         func = getattr(ns, func_name)
         n_params = len(inspect.signature(func).parameters)
         params = [None] * n_params
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(TypeError):
             func(*params)
+        dop = [skrub.var("a")] * n_params
+        with pytest.raises(
+            TypeError,
+            match=r"Expected a Pandas or Polars .*, but got a skrub DataOp",
+        ):
+            func(*dop)
 
 
 #
@@ -83,7 +93,17 @@ def test_is_column(df_module):
 
 def test_to_list(df_module):
     col = ns.col(df_module.example_dataframe, "str-col")
-    assert ns.to_list(col) == ["one", None, "three", "four"]
+    if ns.is_pandas(col) and parse(pd.__version__).major >= parse("3.0.0").major:
+        # In pandas 3.0, nulls in string dtypes have type np.nan, but nullable dtypes
+        # become None
+        # To avoid adding even more conditions I'm checking all elements one by one
+        #
+        to_list = ns.to_list(col)
+        assert to_list[0] == "one"
+        assert pd.isna(to_list[1])
+        assert to_list[2:] == ["three", "four"]
+    else:
+        assert ns.to_list(col) == ["one", None, "three", "four"]
 
 
 def test_to_numpy(df_module, example_data_dict):
@@ -96,8 +116,9 @@ def test_to_numpy(df_module, example_data_dict):
     assert_array_equal(array[2:], np.asarray(example_data_dict["str-col"])[2:])
 
 
+@skip_polars_installed_without_pyarrow
 def test_to_pandas(df_module, pd_module):
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         ns.to_pandas(np.arange(3))
 
     if df_module.name == "pandas":
@@ -178,12 +199,12 @@ def test_all_null_like(df_module):
 def test_concat_horizontal(df_module, example_data_dict):
     df1 = df_module.make_dataframe(example_data_dict)
     df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
-    df = ns.concat_horizontal(df1, df2)
+    df = ns.concat(df1, df2, axis=1)
     assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
 
     # Test concatenating dataframes with the same column names
     df2 = df1
-    df = ns.concat_horizontal(df1, df2)
+    df = ns.concat(df1, df2, axis=1)
     assert ns.shape(df) == (4, 16)
     for n in ns.column_names(df)[8:]:
         assert re.match(r".*__skrub_[0-9a-f]+__", n)
@@ -192,10 +213,72 @@ def test_concat_horizontal(df_module, example_data_dict):
     if df_module.name == "pandas":
         df1 = df_module.DataFrame(data=[1.0, 2.0], columns=["a"], index=[10, 20])
         df2 = df_module.DataFrame(data=[3.0, 4.0], columns=["b"], index=[1, 2])
-        df = ns.concat_horizontal(df1, df2)
+        df = ns.concat(df1, df2, axis=1)
         assert ns.shape(df) == (2, 2)
         # Index of the first dataframe is kept
         assert_array_equal(df.index, [10, 20])
+
+
+def test_concat_vertical(df_module, example_data_dict):
+    df1 = df_module.make_dataframe(example_data_dict)
+    df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
+    df = ns.concat(df1, df2, axis=1)
+    assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
+
+    # Test concatenating dataframes with the same column names
+    df2 = df_module.make_dataframe(example_data_dict)  # it's a copy with same structure
+    df = ns.concat(df1, df2, axis=0)
+    assert ns.shape(df) == (8, 8)
+    assert ns.column_names(df) == ns.column_names(df1)
+
+    # Test concatenating pandas dataframes with different indexes (of same length)
+    if df_module.name == "pandas":
+        pd_df1 = pd.DataFrame(data=[1.0, 2.0], columns=["a"], index=[10, 20])
+        pd_df2 = pd.DataFrame(
+            data=[3.0, 4.0], columns=["a"], index=[1, 2]
+        )  # Same columns
+        df = ns.concat(pd_df1, pd_df2, axis=0)
+        assert ns.shape(df) == (4, 1)
+
+        # Test with overlapping index - should still concatenate
+        pd_df3 = pd.DataFrame(data=[5.0, 6.0], columns=["a"], index=[20, 30])
+        df = ns.concat(pd_df1, pd_df3, axis=0)
+        assert ns.shape(df) == (4, 1)
+        if isinstance(df, pd.DataFrame):
+            assert_array_equal(
+                df.index.to_numpy(),
+                np.array(range(len(df))),
+            )
+        else:
+            pass
+
+
+def test_concat_series(df_module):
+    df = df_module.example_dataframe
+    col = df_module.example_column
+
+    # Mixing types is not allowed
+    msg = r"got dataframes at position \[0\], series at position \[1\]"
+    with pytest.raises(TypeError, match=msg):
+        ns.concat(df, col)
+
+    msg = r"got dataframes at position \[1\], series at position \[0\]."
+    with pytest.raises(TypeError, match=msg):
+        ns.concat(col, df)
+
+    msg = (
+        r"got dataframes at position \[2\], series at position \[0\], "
+        r"types that are neither dataframes nor series at position \[1 3\]"
+    )
+    with pytest.raises(TypeError, match=msg):
+        ns.concat(col, 0, df, 1)
+
+    # Cols only is allowed
+    for axis in 0, 1:
+        assert (
+            ns.shape(ns.concat(col, col, axis=axis))[axis]
+            == ns.shape(ns.to_frame(col))[axis] * 2
+        )
 
 
 def test_is_column_list(df_module):
@@ -211,7 +294,7 @@ def test_is_column_list(df_module):
     assert not ns.is_column_list([np.ones(3)])
     assert not ns.is_column_list(np.ones(3))
     assert not ns.is_column_list(np.ones((3, 3)))
-    assert not ns.is_column_list((df_module.example_column for i in range(2)))
+    assert not ns.is_column_list(df_module.example_column for i in range(2))
     assert not ns.is_column_list({"col": df_module.example_column})
 
 
@@ -261,7 +344,7 @@ def test_col_by_idx_duplicate_columns(pd_module):
 
 
 #
-# Querying and modifying metadata
+# Querying, modifying metadata and shape
 # ===============================
 #
 
@@ -271,6 +354,11 @@ def test_shape(df_module):
     assert ns.shape(df_module.empty_dataframe) == (0, 0)
     assert ns.shape(df_module.example_column) == (4,)
     assert ns.shape(df_module.empty_column) == (0,)
+
+
+def test_to_frame(df_module):
+    col = df_module.example_column
+    assert ns.is_dataframe(ns.to_frame(col))
 
 
 @pytest.mark.parametrize("name", ["", "a\nname"])
@@ -460,6 +548,16 @@ def test_is_string(df_module):
         assert not ns.is_string(ns.col(df, col))
 
 
+def test_sentinel_is_string_pandas_3(df_module):
+    if df_module.name != "pandas":
+        return
+    pd_version = parse(pd.__version__)
+    if pd_version.major < parse("3.0.0").major:
+        return
+    if not pd_version.is_prerelease:
+        pytest.fail("This test should fail when pandas 3.x is released.")
+
+
 def test_to_string(df_module):
     s = ns.to_string(df_module.make_column("_", list(range(5))))
     assert ns.is_string(s)
@@ -500,13 +598,11 @@ def test_to_datetime(df_module):
     s = df_module.make_column("", ["01/02/2020", "02/01/2021", "bad"])
     with pytest.raises(ValueError):
         ns.to_datetime(s, "%m/%d/%Y", True)
-    df_module.assert_column_equal(
-        ns.to_datetime(s, "%m/%d/%Y", False),
-        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 2, 1), None]),
+    assert ns.to_list(ns.to_datetime(s, "%m/%d/%Y", False)) == ns.to_list(
+        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 2, 1), None])
     )
-    df_module.assert_column_equal(
-        ns.to_datetime(s, "%d/%m/%Y", False),
-        df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None]),
+    assert ns.to_list(ns.to_datetime(s, "%d/%m/%Y", False)) == ns.to_list(
+        df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None])
     )
     dt_col = ns.col(df_module.example_dataframe, "datetime-col")
     assert ns.to_datetime(dt_col, None) is dt_col
@@ -653,6 +749,17 @@ def test_mean(df_module):
     )
 
 
+@skip_polars_installed_without_pyarrow
+def test_corr(df_module):
+    df = df_module.example_dataframe
+
+    # Make sure we use Pandas to compute Pearson's correlation.
+    expected_corr = ns.to_pandas(df).corr(numeric_only=True)
+    corr = ns.copy_index(expected_corr, ns.to_pandas(ns.pearson_corr(df)))
+
+    pd.testing.assert_frame_equal(corr, expected_corr)
+
+
 @pytest.mark.parametrize(
     "descending, expected_vals",
     [
@@ -673,7 +780,11 @@ def test_value_counts(df_module):
     counts = ns.sort(counts, by="value")
     expected = df_module.make_dataframe({"value": ["a", "b"], "count": [3, 1]})
     expected = ns.sort(expected, by="value")
-    df_module.assert_frame_equal(counts, expected)
+    if ns.is_pandas(col) and parse(pd.__version__).major >= parse("3.0.0").major:
+        # Added to avoid a failing type check since we don't care about dtype here
+        assert (ns.to_numpy(expected) == ns.to_numpy(counts)).all()
+    else:
+        df_module.assert_frame_equal(counts, expected)
 
 
 @pytest.mark.parametrize("q", [0.0, 0.3, 1.0])
@@ -699,6 +810,23 @@ def test_slice(df_module, obj, s):
     out = ns.to_numpy(out)
     expected = ns.to_numpy(df_module.example_column)[slice(*s)]
     assert_array_equal(out, expected)
+
+
+@pytest.mark.parametrize("obj", ["column", "dataframe"])
+@pytest.mark.parametrize("idx", [[], [1], [2, 1]])
+def test_select_rows(df_module, obj, idx):
+    out = ns.select_rows(getattr(df_module, f"example_{obj}"), idx)
+    if obj == "dataframe":
+        out = ns.col(out, "float-col")
+    out = ns.to_numpy(out)
+    expected = ns.to_numpy(df_module.example_column)[idx]
+    assert_array_equal(out, expected)
+
+
+def test_select_rows_array():
+    a = np.arange(6).reshape((3, 2))
+    assert_array_equal(ns.select_rows(a, (2, 1)), a[[2, 1], :])
+    assert_array_equal(ns.select_rows(a[0], (1, 0)), a[0, [1, 0]])
 
 
 def test_is_null(df_module):
@@ -777,6 +905,24 @@ def test_where(df_module):
     )
     df_module.assert_column_equal(
         out, ns.pandas_convert_dtypes(df_module.make_column("", [0, 11, 2]))
+    )
+
+
+def test_where_row(df_module):
+    df = df_module.make_dataframe({"col1": [1, 2, 3], "col2": [1000, 2000, 3000]})
+    out = ns.where_row(
+        df,
+        df_module.make_column("", [False, True, False]),  # mask
+        df_module.make_column(
+            "", [None, None, None]
+        ),  # values to put in on the entire row
+    )
+    right = df_module.make_dataframe(
+        {"col1": [None, 2, None], "col2": [None, 2000, None]}
+    )
+    df_module.assert_frame_equal(
+        ns.pandas_convert_dtypes(out),
+        ns.pandas_convert_dtypes(right),
     )
 
 
@@ -865,3 +1011,34 @@ def test_abs(df_module):
 def test_total_seconds(df_module):
     s = df_module.make_column("", [timedelta(seconds=20), timedelta(hours=1)])
     assert ns.to_list(ns.total_seconds(s)) == [20, 3600]
+
+
+@pytest.mark.parametrize(
+    "col, expected",
+    [
+        ([1, 2, 3], True),
+        (["a", "b", "c"], True),
+        ([1, 3, 2], False),
+        (["a", "c", "b"], False),
+        ([1, None, 3], True),
+        ([inspect, re, ns.is_sorted], False),  # weird object dtype
+    ],
+)
+def test_is_sorted(col, expected, df_module):
+    col = df_module.make_column("", col)
+    assert ns.is_sorted(col) == expected
+    if expected:
+        assert not ns.is_sorted(col[::-1])
+        assert ns.is_sorted(col[::-1], descending=True)
+
+
+@pytest.mark.parametrize(
+    "col", [[[1, 2], [3, 4]], [{"a": 1, "b": 2}, {"a": 1, "b": 3}]]
+)
+def test_is_sorted_object_dtypes(col, df_module):
+    # For those more complex dtypes where the result is more ambiguous pandas &
+    # polars or even different versions of the same package can disagree on
+    # whether they are sorted. For the time being we don't have a strong reason
+    # to add the code / computation time to handle those discrepancies.
+    # However, is_sorted should not crash and return a Boolean in all cases.
+    assert isinstance(ns.is_sorted(df_module.make_column("", col)), bool)

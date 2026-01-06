@@ -28,10 +28,6 @@ from skrub.tests.utils import generate_data
 NoneType = type(None)
 
 
-# Ignore lines too long, as links can't be cut
-# flake8: noqa: E501
-
-
 class MinHashEncoder(BaseEstimator, TransformerMixin):
     """
     Encode string categorical features as a numeric array, minhash method
@@ -132,6 +128,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.categorical = True
+        return tags
+
     def _get_murmur_hash(self, string):
         """
         Encode a string using murmur hashing function.
@@ -146,7 +147,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         ndarray of shape (n_components, )
             The encoded string.
         """
-        min_hashes = np.ones(self.n_components) * np.infty
+        min_hashes = np.ones(self.n_components) * np.inf
         grams = get_unique_ngrams(string, self.ngram_range)
         if len(grams) == 0:
             grams = get_unique_ngrams(" Na ", self.ngram_range)

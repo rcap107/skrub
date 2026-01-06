@@ -7,7 +7,7 @@ import unicodedata
 import numpy as np
 
 from skrub import _dataframe as sbd
-from skrub._dispatch import dispatch
+from skrub._dispatch import dispatch, raise_dispatch_unregistered_type
 
 
 def get_dtype_name(column):
@@ -16,7 +16,7 @@ def get_dtype_name(column):
 
 @dispatch
 def to_dict(df):
-    raise NotImplementedError()
+    raise_dispatch_unregistered_type(df, kind="DataFrame")
 
 
 @to_dict.specialize("pandas", argument_type="DataFrame")
@@ -43,8 +43,8 @@ def quantiles(column):
 
 def ellide_string(s, max_len=30):
     """Shorten a string so it can be used as a plot axis title or label."""
-    if not isinstance(s, str):
-        return s
+    s = str(s)
+
     # normalize whitespace
     s = re.sub(r"\s+", " ", s)
     if len(s) <= max_len:
@@ -87,7 +87,11 @@ def format_number(number):
     if isinstance(number, numbers.Integral):
         return f"{number:,}"
     if isinstance(number, numbers.Real):
-        return f"{number:#.3g}"
+        # Import placed here to avoid circular import related to dispatch
+        from skrub._config import get_config
+
+        var = get_config()["float_precision"]
+        return f"{number:#.{var}g}"
     return str(number)
 
 
@@ -131,3 +135,9 @@ def duration_to_numeric(col):
     if q < YEAR:
         return seconds / DAY, "day"
     return seconds / YEAR, "year"
+
+
+def strip_xml_declaration(svg):
+    svg = re.sub(r"<\?xml.*?\?>", "", svg, flags=re.DOTALL)
+    svg = re.sub(r"<!DOCTYPE.*?>", "", svg, flags=re.DOTALL)
+    return svg

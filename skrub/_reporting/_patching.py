@@ -11,13 +11,25 @@ def _stashed_name(method_name):
     return f"_skrub_{method_name}"
 
 
-def _patch(cls, method_name):
+def _patch(cls, method_name, verbose, max_plot_columns, max_association_columns):
     if (original_method := getattr(cls, method_name, None)) is None:
         return
     stashed_name = _stashed_name(method_name)
     if not hasattr(cls, stashed_name):
         setattr(cls, stashed_name, original_method)
-    setattr(cls, method_name, lambda df: getattr(TableReport(df), method_name)())
+    setattr(
+        cls,
+        method_name,
+        lambda df: getattr(
+            TableReport(
+                df,
+                verbose=verbose,
+                max_plot_columns=max_plot_columns,
+                max_association_columns=max_association_columns,
+            ),
+            method_name,
+        )(),
+    )
 
 
 def _unpatch(cls, method_name):
@@ -27,7 +39,7 @@ def _unpatch(cls, method_name):
     setattr(cls, method_name, original_method)
 
 
-def _change_display(transform, to_patch):
+def _change_display(transform, to_patch, **transform_kwargs):
     for module_name, class_names in to_patch:
         try:
             mod = importlib.import_module(module_name)
@@ -36,7 +48,7 @@ def _change_display(transform, to_patch):
         for cls_name in class_names:
             cls = getattr(mod, cls_name)
             for method_name in _METHODS_TO_PATCH:
-                transform(cls, method_name)
+                transform(cls, method_name, **transform_kwargs)
 
 
 def _get_to_patch(pandas, polars):
@@ -48,7 +60,9 @@ def _get_to_patch(pandas, polars):
     return to_patch
 
 
-def patch_display(pandas=True, polars=True):
+def patch_display(
+    pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
+):
     """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
 
     This function replaces the HTML displays (what is shown when an object is
@@ -63,6 +77,20 @@ def patch_display(pandas=True, polars=True):
         If False, do not override the displays for pandas dataframes.
     polars : bool, optional (default=True)
         If False, do not override the displays for polars dataframes.
+    verbose : int, default = 1
+        Whether to print progress information while table report is being generated.
+
+        * verbose = 1 prints how many columns have been processed so far.
+        * verbose = 0 silences the output.
+    max_plot_columns : int, default=30
+        Maximum number of columns for which plots should be generated.
+        If the number of columns in the dataframe is greater than this value,
+        the plots will not be generated. If None, all columns will be plotted.
+    max_association_columns : int, default=30
+        Maximum number of columns for which associations should be computed.
+        If the number of columns in the dataframe is greater than this value,
+        the associations will not be computed. If None, the associations
+        for all columns will be computed.
 
     See Also
     --------
@@ -72,7 +100,25 @@ def patch_display(pandas=True, polars=True):
     TableReport :
         Directly create a report from a dataframe.
     """
-    _change_display(_patch, _get_to_patch(pandas=pandas, polars=polars))
+    _change_display(
+        _patch,
+        _get_to_patch(pandas=pandas, polars=polars),
+        verbose=verbose,
+        max_plot_columns=max_plot_columns,
+        max_association_columns=max_association_columns,
+    )
+
+
+def _patch_display(
+    pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
+):
+    _change_display(
+        _patch,
+        _get_to_patch(pandas=pandas, polars=polars),
+        verbose=verbose,
+        max_plot_columns=max_plot_columns,
+        max_association_columns=max_association_columns,
+    )
 
 
 def unpatch_display(pandas=True, polars=True):
@@ -96,4 +142,8 @@ def unpatch_display(pandas=True, polars=True):
     TableReport :
         Directly create a report from a dataframe.
     """
+    _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))
+
+
+def _unpatch_display(pandas=True, polars=True):
     _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))
