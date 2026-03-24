@@ -41,15 +41,12 @@ Changes
 -------
 - Increased the minimum version of polars from 0.20 to 1.5.0.
   :pr:`1897` by :user:`Riccardo Cappuzzo <rcap107>`.
-- :class:`ApplyToCols` has been modified so that now it can detect automatically
-  whether the provided transformer should be applied independently on each column,
-  or on all selected columns as a single dataframe. In most cases, this replaces
-  the original ``ApplyToCols`` and ``ApplyToFrame``. As a result, ``ApplyToCols``
-  and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol` and
-  :class:`ApplyToSubFrame` respectively.
-  The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
-  ``how`` to ``cols``.
-  :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+- ``ApplyToCols`` and ``ApplyToFrame`` have been merged into a single class,
+  :class:`ApplyToCols`,that covers the functionality of both the old classes by
+  detecting automatically whether the provided transformer should be applied
+  independently on each column, or on all selected columns as a single dataframe.
+  As a result, ``ApplyToCols`` and ``ApplyToFrame`` have been removed.
+  :pr:`1913`, :pr:`1919` and :pr:`1962` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The dataset fetcher functions now include a "path" field for each table in the dataset.
   For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
   Additionally, datasets that include a single table have the field ``path``. These
@@ -68,6 +65,9 @@ Changes
 - The configuration parameter "use_table_report" has been removed from the skrub
   configuration. Use :meth:`patch_display` instead.
   :pr:`1973` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The overplotting of the counts atop the vertical histogram bars in the
+  :class:'TableReport' has been removed due to formatting issues.
+  :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
 
 Bug Fixes
 --------
@@ -84,12 +84,15 @@ Bug Fixes
 - :class:`CheckInputDataFrame` no longer collects Polars LazyFrames automatically;
   a ``TypeError`` is now raised instead, consistent with the rest of the library.
   :pr:`1941` by :user:`Mudit Atrey <MuditAtrey>`.
+- :func:`fetch_employee_salaries` now correctly writes the train and test
+  split CSV files to their respective paths when ``split`` is specified.
+  :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
 
 Documentation
 -------------
 - Updated gallery examples to load datasets from their file paths using
   ``pd.read_csv()``, following the pattern established in :pr:`1852`.
-  :pr:`1940` by :user:`MuditAtrey <MuditAtrey>`.
+  :pr:`1940` and :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
 
 Release 0.7.2
 =============
