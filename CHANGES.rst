@@ -19,18 +19,55 @@ New Features
   faster (the overhead it removes typically becomes noticeable only in DataOps
   with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
   become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- The reports produced by :meth:`DataOp.skb.full_report` and
+  :meth:`SkrubLearner.report` now also display the values provided in the
+  environment. :pr:`1920` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaSearch` expose
+  some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
+  ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+- It is now possible to pass additional (dynamically computed) arguments to the
+  cross-validation splitter used by :class:`DataOp` objects for validation,
+  hyperparameter search etc. For example, the groups for a
+  :class:`sklearn.model_selection.GroupKFold` can be computed as part of the
+  DataOp evaluation and used for splitting. This is achieved by passing the
+  splitter and its arguments to :meth:`DataOp.skb.mark_as_X`. :pr:`1943` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
+  selecting columns that have a fraction of null values above the given threshold.
+  :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
-- :class:`ApplyToCols` has been modified so that now it can detect automatically
-  whether the provided transformer should be applied independently on each column,
-  or on all selected columns as a single dataframe. In most cases, this replaces
-  the original ``ApplyToCols`` and ``ApplyToFrame``. As a result, ``ApplyToCols``
-  and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol` and
-  :class:`ApplyToSubFrame` respectively.
-  The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
-  ``how`` to ``cols``.
-  :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Increased the minimum version of polars from 0.20 to 1.5.0.
+  :pr:`1897` by :user:`Riccardo Cappuzzo <rcap107>`.
+- ``ApplyToCols`` and ``ApplyToFrame`` have been merged into a single class,
+  :class:`ApplyToCols`,that covers the functionality of both the old classes by
+  detecting automatically whether the provided transformer should be applied
+  independently on each column, or on all selected columns as a single dataframe.
+  As a result, ``ApplyToCols`` and ``ApplyToFrame`` have been removed.
+  :pr:`1913`, :pr:`1919` and :pr:`1962` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The dataset fetcher functions now include a "path" field for each table in the dataset.
+  For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
+  Additionally, datasets that include a single table have the field ``path``. These
+  fields contain the paths to the datasets stored in the ``skrub_data`` folder.
+  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
+  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
+  is deprecated and will be removed in a future version of skrub.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
+- :class:`core.SingleColumnTransformer` and associated exception :class:`core.RejectColumn` (used
+  internally by many skrub estimators) have been added to the public API, in the newly-created
+  :package:`skrub.core` module. :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
+- Added the strings ``"None"`` and ``"none"`` to the list of null string values in
+  :class:`Cleaner`. Also, exposed the list of null string values that will be set
+  to null by the :class:`Cleaner` as the parameter ``null_strings``.
+  :pr:`1952` and :pr:`1954` by :user:`Lisa McBride <lisaleemcb>`.
+- The configuration parameter "use_table_report" has been removed from the skrub
+  configuration. Use :meth:`patch_display` instead.
+  :pr:`1973` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The overplotting of the counts atop the vertical histogram bars in the
+  :class:'TableReport' has been removed due to formatting issues.
+  :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
 
 Bug Fixes
 --------
@@ -40,6 +77,22 @@ Bug Fixes
   and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
 - Errors raised when a polars LazyFrame is passed where an eager DataFrame is
   expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`DataOp.skb.cross_validate` would raise an error when passed
+  ``return_indices=True``. Now it returns the train and test indices of each
+  fold in the ``train_indices`` and ``test_indices`` columns of the result
+  dataframe. :pr:`1953` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`CheckInputDataFrame` no longer collects Polars LazyFrames automatically;
+  a ``TypeError`` is now raised instead, consistent with the rest of the library.
+  :pr:`1941` by :user:`Mudit Atrey <MuditAtrey>`.
+- :func:`fetch_employee_salaries` now correctly writes the train and test
+  split CSV files to their respective paths when ``split`` is specified.
+  :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
+
+Documentation
+-------------
+- Updated gallery examples to load datasets from their file paths using
+  ``pd.read_csv()``, following the pattern established in :pr:`1852`.
+  :pr:`1940` and :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
 
 Release 0.7.2
 =============
