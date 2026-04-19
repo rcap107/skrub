@@ -3,11 +3,14 @@
 .. |ApplyToCols| replace:: :class:`ApplyToCols`
 .. |RejectColumn| replace:: :class:`core.RejectColumn`
 .. |SingleColumnTranformer| replace:: :class:`core.SingleColumnTranformer`
+.. |ToDatetime| replace:: :class:`ToDatetime`
 
 .. _user_guide_single_column_transformer:
 
 Advanced columnwise operations
 ------------------------------
+
+.. _single_column_transformer:
 
 The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
