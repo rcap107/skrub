@@ -19,6 +19,7 @@ from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
+from ._clean_null_strings import CleanNullStrings
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 from ._utils import unique_strings
 
@@ -641,6 +642,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             self._input_name = sbd.name(X)
         if not hasattr(self, "_random_state"):
             self._random_state = check_random_state(self.random_state)
+        self._clean_null_transformer = CleanNullStrings()
+        # X = self._clean_null_transformer.fit_transform(X)
         is_null = sbd.to_numpy(sbd.is_null(X))
         X = sbd.to_numpy(X)
         # Init H_dict_ with empty dict if it's the first call of partial_fit
@@ -737,6 +740,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         check_is_fitted(self, "H_dict_")
         # rejecting columns is only for fit, so we raise a plain ValueError here
         self._check_input_type(X, err_type=ValueError)
+        # X = self._clean_null_transformer.transform(X)
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._transform(sbd.to_numpy(X), is_null)
         result /= self.scaling_factor_

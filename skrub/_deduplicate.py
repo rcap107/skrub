@@ -11,6 +11,9 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
 
+from . import _dataframe as sbd
+from ._clean_null_strings import CleanNullStrings
+
 
 def _compute_ngram_distance(
     unique_words,
@@ -260,6 +263,9 @@ def deduplicate(
     8  white      8              white
     9  white      9              white
     """
+    X = CleanNullStrings().fit_transform(X)
+    X = sbd.fill_nulls(X, value="")
+
     unique_words, counts = np.unique(X, return_counts=True)
     distance_mat = _compute_ngram_distance(
         unique_words, ngram_range=ngram_range, analyzer=analyzer
