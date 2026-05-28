@@ -450,6 +450,16 @@ class TableReport:
         # stage and with a UTF-8 encoding.
         file.write(html)
 
+    def write_json(self, file):
+        """Store the report into an HTML file.
+
+        Parameters
+        ----------
+        file : str, pathlib.Path or file object
+            The file object or path of the file to store the HTML output.
+        """
+        pass
+
     def open(self):
         """Open the HTML report in a web browser."""
         open_in_browser(self.html())
