@@ -36,8 +36,8 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 import skrub
+from skrub._data_ops import _utils
 from skrub._data_ops._estimator import _SharedDict
-from skrub._data_ops._inspection import _has_graphviz
 
 #
 # testing utils
@@ -1157,7 +1157,7 @@ def test_plot_results(randomized_search_backend):
         assert (fig is None) == (not plotly_installed)
 
 
-@pytest.mark.skipif(not _has_graphviz(), reason="full report requires graphviz")
+@pytest.mark.skipif(not _utils.has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     data_op, data = get_data_op_and_data("simple")
     pipe = data_op.skb.make_learner()
@@ -1248,18 +1248,19 @@ def test_find_fitted_estimator():
     assert isinstance(learner.find_fitted_estimator("predictor"), LogisticRegression)
 
 
-def test_truncated_after():
-    learner = (
-        skrub.X()
-        .skb.apply(MinMaxScaler())
-        .skb.set_name("scaling")
-        .skb.apply(LogisticRegression(), y=skrub.y())
-        .skb.make_learner()
-    )
+@pytest.mark.parametrize("wrap_in_choice", [False, True])
+def test_truncated_after(wrap_in_choice):
+    scaled = skrub.X().skb.apply(MinMaxScaler())
+    if wrap_in_choice:
+        scaled = skrub.as_data_op(skrub.choose_from([scaled], name="scaling"))
+    else:
+        scaled = scaled.skb.set_name("scaling")
+    learner = scaled.skb.apply(LogisticRegression(), y=skrub.y()).skb.make_learner()
     X = np.array([10.0, 5.0, 0.0])[:, None]
     y = np.array([1, 0, 1])
     learner.fit({"X": X, "y": y})
     sub_learner = learner.truncated_after("scaling")
+    assert isinstance(sub_learner.data_op, skrub.DataOp)
     assert np.allclose(
         sub_learner.transform({"X": X}), np.array([1.0, 0.5, 0.0])[:, None]
     )
@@ -1267,7 +1268,7 @@ def test_truncated_after():
     assert np.allclose(
         sub_learner.transform({"X": X}), np.array([10.0, 5.0, -1.0])[:, None]
     )
-    with pytest.raises(KeyError, match="'xyz'"):
+    with pytest.raises(ValueError, match="'xyz'"):
         learner.truncated_after("xyz")
 
 
