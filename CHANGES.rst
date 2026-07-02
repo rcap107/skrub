@@ -13,7 +13,7 @@ New Features
 ------------
 - New methods :meth:`SkrubLearner.get_named_params` and
   :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
-  choices contained in the DataOp, keyed by choice name. It provides a more
+  choices contained in the DataOp, keyed by choice name. They provide a more
   robust way of transferring selected hyperparameters from one DataOp to a
   different one than :meth:`SkrubLearner.get_params` and
   :meth:`SkrubLearner.set_params`.
@@ -26,12 +26,13 @@ New Features
 - It is now possible to attach new preview values to the variables in a DataOp
   with :meth:`DataOp.skb.set_data`. :pr:`2081` by
   :user:`Jérôme Dockès <jeromedockes>`.
-- :class:`DataOp` objects have a new attribute :attr:`DataOp.skb.id` which
-  provides an alternative for referring to a node, in the environment passed to
+- :class:`DataOp` objects have a new attribute :attr:`DataOp.skb.id`.
+  :attr:`DataOp.skb.id`
+  provides an alternative for referring to a node in the environment passed to
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
   :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
   :user:`Jérôme Dockès <jeromedockes>`.
-- The :class:`SessionEncoder` is now available. This encoder adds a `session_id`
+- The :class:`SessionEncoder` is now available. This encoder adds a ``session_id``
   column, which groups together events that occur within the given session gap.
   Additionally, it is possible to provide a ``split_by`` column or list of columns
   (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
@@ -40,8 +41,8 @@ New Features
 -  A new synthetic dataset generator for timestamped data and session-based
   operations has been added: :meth:`~skrub.datasets.make_retail_events`.
   :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
-- The :class:`DropSimilar` transformer has been added, for removing columns in a
-  dataframe that present high correlation with other columns. :pr:`2023` by
+- The :class:`DropSimilar` transformer has been added, for removing columns that
+  present high correlation with other columns in a dataframe . :pr:`2023` by
   :user:`Eloi Massoulié <emassoulie>`.
 - :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
   separators to parse numerical columns that use formatting different from the default
@@ -51,26 +52,29 @@ New Features
   Gómez Jiménez <gabrielapgomezji>`.
 - :meth:`TableReport.json` now includes histogram data for numeric and datetime
   columns (the bin count and edges, and numbers of low and high outliers). Now
-  ``json()`` contains all the information shown in the report html rendering,
-  including the plots. :pr:`2164` by :user:`Jérôme Dockès <jeromedockes>`.
+  ``json()`` contains all the information shown in the report HTML rendering,
+  including the plots. The schema of the generated JSON is available at :ref:``.
+  :pr:`2164` by :user:`Jérôme Dockès <jeromedockes>`.
 - Added :func:`skrub.selectors.object` to select columns with the ``object``
   (pandas) or ``pl.Object`` (polars) dtype. :pr:`2171` by :user:`Omkar Kabde
   <omkar-334>`.
 
 Changes
 -------
-- Grouped Examples into subject-specific sections. :pr:`2102` by
+- Gallery examples have been grouped into subject-specific sections. :pr:`2102` by
   :user:`Maureen Githaiga <maureen-githaiga>`.
-- :meth:`choose_from` now transparently converts `outcomes` to a list when it is
+- :meth:`choose_from` now transparently converts ``outcomes`` to a list when it is
   another type of sequence. :pr:`2100` by :user:`aidbar <aidbar>`.
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.
-- Improving the association tab error message when only one column is present
+- The error message displayed in the Associations tab of the :class:`TableReport`
+  has been improved for reports where only one column is present.
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 - Added support for numpy arrays in :meth:`DataOp.skb.concat`.
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
-- The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
+- The :class:`TableReport` can now be exported in markdown format with
+  func:`~skrub.TableReport.markdown`.
   :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
   :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
