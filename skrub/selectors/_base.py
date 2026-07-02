@@ -587,9 +587,9 @@ class Selector:
 
     See Also
     --------
-    ~skrub.ApplyToCols :
+    skrub.ApplyToCols :
         Apply a transformer to selected columns, use selectors for column selection.
-    ~skrub.DataOps.skb.apply :
+    skrub.DataOp.skb.apply :
         Apply a transformer to selected columns in a DataOps workflow.
 
     Examples

@@ -29,7 +29,6 @@ __all__ = [
 def glob(pattern):
     """Select columns by name with Unix shell style 'glob' pattern.
 
-    **When to use:**
     Use this selector for simple wildcard patterns on column names.
     This is useful for selecting columns with predictable naming patterns
     (e.g., all columns ending in '_mm', or starting with 'feature_').
@@ -108,7 +107,6 @@ def _regex(col_name, pattern, flags=0):
 def regex(pattern, flags=0):
     """Select columns by name with a regular expression.
 
-    **When to use:**
     Use this selector for complex name patterns that glob patterns cannot express.
     This is useful for selecting columns with specific naming conventions or
     patterns that require regular expression features (e.g., columns matching
@@ -214,7 +212,6 @@ def numeric():
     """
     Select columns that have a numeric data type.
 
-    **When to use:**
     Use this selector to find all numeric columns for scaling, normalization,
     or statistical analysis. This includes both integer and floating-point types
     but excludes Boolean columns (which often need different handling).
@@ -225,8 +222,7 @@ def numeric():
     Notes
     -----
     Boolean columns are intentionally excluded because they typically require
-    different preprocessing strategies than numeric features (e.g., encoding
-    rather than scaling).
+    different preprocessing strategies than numeric features.
 
     See Also
     --------
@@ -258,6 +254,16 @@ def numeric():
     >>> df
        f64  F64  i64  I64  i8  bool_  Bool_   str_
     0  1.1  2.3    2    2   3   True   True  hello
+    >>> df.dtypes
+    f64      float64
+    F64      Float64
+    i64        int64
+    I64        Int64
+    i8          int8
+    bool_       bool
+    Bool_    boolean
+    str_      ...
+    dtype: object
 
     Select all numeric columns (note: booleans are excluded):
 
@@ -279,7 +285,6 @@ def integer():
     """
     Select columns that have an integer data type.
 
-    **When to use:**
     Use this selector when you specifically need integer-typed columns,
     excluding floating-point and Boolean types. This is useful for selecting
     discrete numeric features or ID-like columns.
@@ -322,6 +327,16 @@ def integer():
     >>> df
        f64  F64  i64  I64  i8  bool_  Bool_   str_
     0  1.1  2.3    2    2   3   True   True  hello
+    >>> df.dtypes
+    f64      float64
+    F64      Float64
+    i64        int64
+    I64        Int64
+    i8          int8
+    bool_       bool
+    Bool_    boolean
+    str_      ...
+    dtype: object
 
     Select all integer columns (note: booleans are excluded):
 
@@ -343,7 +358,6 @@ def float():
     """
     Select columns that have a floating-point data type.
 
-    **When to use:**
     Use this selector when you specifically need floating-point-typed columns,
     excluding integer and Boolean types. This is useful for selecting continuous
     numeric features that have been measured or calculated as decimals.
@@ -382,6 +396,17 @@ def float():
     >>> df
        f64  F64  f32  i64  I64  i8  bool_  Bool_   str_
     0  1.1  2.3  3.4    2    2   3   True   True  hello
+    >>> df.dtypes
+    f64      float64
+    F64      Float64
+    f32      float32
+    i64        int64
+    I64        Int64
+    i8          int8
+    bool_       bool
+    Bool_    boolean
+    str_      ...
+    dtype: object
 
     Select all floating-point columns:
 
@@ -407,7 +432,6 @@ def has_dtype(*dtypes):
     """
     Select columns whose dtype is equal to one of the provided dtypes.
 
-    **When to use:**
     This is an advanced selector for edge cases where you need to match specific
     dtypes not covered by other selectors. Use this when working with specialized
     or custom dtypes (e.g., pandas ListDtype, polars Object).
@@ -428,11 +452,11 @@ def has_dtype(*dtypes):
     See Also
     --------
     numeric :
-        Select numeric columns (simpler than has_dtype for standard types).
+        Select numeric columns.
     string :
-        Select string columns (simpler than has_dtype for standard types).
+        Select string columns.
     categorical :
-        Select categorical columns (simpler than has_dtype for standard types).
+        Select categorical columns.
     object :
         Select columns with "object" dtype (library specific).
 
@@ -477,7 +501,6 @@ def any_date():
     """
     Select columns that have a Date or Datetime data type.
 
-    **When to use:**
     Use this selector to find temporal columns that need date-specific
     preprocessing, such as feature extraction (year, month, day) or
     time-based aggregations.
@@ -493,10 +516,10 @@ def any_date():
 
     See Also
     --------
-    ~skrub.Cleaner :
+    skrub.Cleaner :
         Parse and clean date columns into proper datetime types.
 
-    ~skrub.ToDatetime :
+    skrub.ToDatetime :
         Convert string columns to datetime types.
 
     Examples
@@ -513,6 +536,15 @@ def any_date():
     ...         ],
     ...         str_=["2020-03-02 10:30:00"],
     ...     )
+    >>> df
+                       dt                      tzdt                 str_
+    0 2020-03-02 10:30:00 2020-03-02 10:30:00+00:00  2020-03-02 10:30:00
+
+    >>> df.dtypes
+    dt           datetime64[...]
+    tzdt    datetime64[..., UTC]
+    str_                 ...
+    dtype: object
     ... )
 
     Select all date/datetime columns:
@@ -548,7 +580,6 @@ def categorical():
     """
     Select columns that have a Categorical (or polars Enum) data type.
 
-    **When to use:**
     Use this selector to find categorical columns with an explicitly defined
     set of categories. This is useful for identifying columns ready for
     encoding or that contain discrete, predefined values.
@@ -565,7 +596,7 @@ def categorical():
     cardinality_below :
         Select columns with low cardinality.
         Use this if you have text columns without explicit categories.
-    ~skrub.ToCategorical :
+    skrub.ToCategorical :
         Convert a column to categorical type for explicit category handling.
 
     Examples
@@ -616,7 +647,6 @@ def string():
     """
     Select columns that have a String data type.
 
-    **When to use:**
     Use this selector to find all text columns for encoding, NLP processing,
     or text-based feature engineering. This includes both explicit string dtypes
     and object columns containing only strings.
