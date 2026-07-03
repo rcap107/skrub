@@ -162,6 +162,7 @@ API_REFERENCE = {
                     "selectors.object",
                     "selectors.regex",
                     "selectors.select",
+                    "selectors.drop",
                     "selectors.string",
                 ],
             }
