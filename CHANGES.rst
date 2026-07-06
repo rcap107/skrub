@@ -62,6 +62,11 @@ New Features
 - Added :func:`skrub.selectors.object` to select columns with the ``object``
   (pandas) or ``pl.Object`` (polars) dtype. :pr:`2171` by :user:`Omkar Kabde
   <omkar-334>`.
+- :meth:`ParamSearch.plot_results` and :meth:`OptunaParamSearch.plot_results`
+  accept new parameters ``show_scores``, ``show_choices``, and ``show_times`` to
+  control respectively which scores, choices (params), and times (fit or score
+  durations) should be included in the figure. :pr:`2202` by :user:`Jérôme
+  Dockès <jeromedockes>`.
 
 Changes
 -------
