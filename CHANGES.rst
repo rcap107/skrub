@@ -11,6 +11,12 @@ Ongoing development
 
 New Features
 ------------
+- :func:`set_config` and :func:`config_context` now accept a
+  ``table_report_n_rows`` parameter to globally control the default number of
+  rows displayed in :class:`TableReport`.
+  :pr:`2193` by :user:`Mann <m4nn2609-dot>`.
+- :meth:`TableReport.dict` now allows exporting the report data as a Python
+  dictionary. :pr:`2188` by :user:`m4nn2609-dot <m4nn2609-dot>`.
 - New methods :meth:`SkrubLearner.get_named_params` and
   :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
   choices contained in the DataOp, keyed by choice name. They provide a more
@@ -58,6 +64,11 @@ New Features
 - Added :func:`skrub.selectors.object` to select columns with the ``object``
   (pandas) or ``pl.Object`` (polars) dtype. :pr:`2171` by :user:`Omkar Kabde
   <omkar-334>`.
+- :meth:`ParamSearch.plot_results` and :meth:`OptunaParamSearch.plot_results`
+  accept new parameters ``show_scores``, ``show_choices``, and ``show_times`` to
+  control respectively which scores, choices (params), and times (fit or score
+  durations) should be included in the figure. :pr:`2202` by :user:`Jérôme
+  Dockès <jeromedockes>`.
 
 Changes
 -------
