@@ -11,6 +11,19 @@ Ongoing development
 
 New Features
 ------------
+- :func:`set_config` and :func:`config_context` now accept a
+  ``table_report_n_rows`` parameter to globally control the default number of
+  rows displayed in :class:`TableReport`.
+  :pr:`2193` by :user:`Mann <m4nn2609-dot>`.
+- :meth:`TableReport.dict` now allows exporting the report data as a Python
+  dictionary. :pr:`2188` by :user:`m4nn2609-dot <m4nn2609-dot>`.
+- New methods :meth:`SkrubLearner.get_named_params` and
+  :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
+  choices contained in the DataOp, keyed by choice name. It provides a more
+  robust way of transferring selected hyperparameters from one DataOp to a
+  different one than :meth:`SkrubLearner.get_params` and
+  :meth:`SkrubLearner.set_params`.
+  :pr:`2090` by :user:`Jérôme Dockès <jeromedockes>`.
 - A parameter ``becomes_default`` has been added to :func:`var`. It allows
   indicating that the provided preview ``value`` should also be treated as a
   default value for this variable in all contexts (for example in a
@@ -24,9 +37,43 @@ New Features
   :meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc., or in
   :meth:`DataOp.skb.find` or :meth:`SkrubLearner.truncated_after`. :pr:`2062` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`SessionEncoder` is now available. This encoder adds a `session_id`
+  column, which groups together events that occur within the given session gap.
+  Additionally, it is possible to provide a ``split_by`` column or list of columns
+  (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
+  value.
+  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
+-  A new synthetic dataset generator for timestamped data and session-based
+  operations has been added: :meth:`~skrub.datasets.make_retail_events`.
+  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
+- The :class:`DropSimilar` transformer has been added, for removing columns in a
+  dataframe that present high correlation with other columns. :pr:`2023` by
+  :user:`Eloi Massoulié <emassoulie>`.
+- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+  separators to parse numerical columns that use formatting different from the default
+  formatting used in Python, such as ``1'234,5``.
+  Additionally, negative numbers indicated with parentheses can be converted to the
+  regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+  Gómez Jiménez <gabrielapgomezji>`.
+- :meth:`TableReport.json` now includes histogram data for numeric and datetime
+  columns (the bin count and edges, and numbers of low and high outliers). Now
+  ``json()`` contains all the information shown in the report html rendering,
+  including the plots. :pr:`2164` by :user:`Jérôme Dockès <jeromedockes>`.
+- Added :func:`skrub.selectors.object` to select columns with the ``object``
+  (pandas) or ``pl.Object`` (polars) dtype. :pr:`2171` by :user:`Omkar Kabde
+  <omkar-334>`.
+- :meth:`ParamSearch.plot_results` and :meth:`OptunaParamSearch.plot_results`
+  accept new parameters ``show_scores``, ``show_choices``, and ``show_times`` to
+  control respectively which scores, choices (params), and times (fit or score
+  durations) should be included in the figure. :pr:`2202` by :user:`Jérôme
+  Dockès <jeromedockes>`.
 
 Changes
 -------
+- Grouped Examples into subject-specific sections. :pr:`2102` by
+  :user:`Maureen Githaiga <maureen-githaiga>`.
+- :meth:`choose_from` now transparently converts `outcomes` to a list when it is
+  another type of sequence. :pr:`2100` by :user:`aidbar <aidbar>`.
 - An unnecessary warning that was raised when passing a numpy array to the
   TableVectorizer has been removed. :pr:`1908` by
   :user:`Sandrine Henry <sandrineh>`.
@@ -34,15 +81,48 @@ Changes
   :pr:`2094` by :user:`Alicja Kosak <AlicjaKo>`.
 - Added support for numpy arrays in :meth:`DataOp.skb.concat`.
   :pr:`2096` by :user:`Ayesha Siddiqua <siddiqua-tamk>`.
+- The :class:`TableReport` can now be exported in markdown format with ``.markdown``.
+  :pr:`2048` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The minimum required version of matplotlib has been increased from 3.4.3 to 3.6.1.
+  :pr:`2159` by :user:`Riccardo Cappuzzo <rcap107>`.
+- :meth:`SkrubLearner.score` has been enhanced when the DataOp used
+  :meth:`DataOp.skb.with_scoring`. During scoring, predict(), predict_proba()
+  etc. are cached to avoid recomputation when multiple scorers are used (or one
+  scorer calls them several times). Moreover it is possible to pass
+  ``return_predictions=True`` to also retrieve any predictions that have been
+  computed during scoring, in addition to the scores. Finally, in cases where we
+  already have the predictions but want the result of score() without
+  recomputing them, it is possible to provide them in the environment passed to
+  ``score({..., "_skrub_predictions": {"predict_proba": ...}})``.
+  :pr:`2195` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`SkrubLearner.find_fitted_estimator` now supports searching for the
+  apply node by ID or callable predicate as alternatives to the node name.
+  :pr:`2194` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Bugfixes
 --------
+- :class:`MinHashEncoder` with the default ``hashing="fast"`` now uses every
+  n-gram size in ``ngram_range`` (the upper bound is inclusive, as documented
+  and as already done by ``hashing="murmur"``). Previously the largest size was
+  dropped, so the default ``ngram_range=(2, 4)`` ignored 4-grams and a
+  single-size range such as ``(3, 3)`` produced the same constant encoding for
+  every string. :pr:`2168` by :user:`José Maia <glitch-ux>`.
 - A bug in how the :class:`TableVectorizer` and :class:`Cleaner` treated columns
   duration columns in pandas and polars has been fixed. Now, both classes convert
   durations to the total number of seconds (with fractional part). This is done
   by the new transformer :class:`DurationToFloat`. :pr:`2069` by
   :user:`Riccardo Cappuzzo <rcap107>`.
-
-
+- An error that could arise when running ``TableReport`` on dataframes containing
+  double dollar (``$$``) signs has been fixed.
+  :pr:`2154` by :user:`Katerina Michenina <Michenina-Lab>`,
+  :user:`CecilyTS <CecilyTS>`, :user:`Eve Rabin <eve2705>`.
+- An error that happened when running ``TableReport`` or ``column_associations``
+  on some dataframes with non-string column names has been fixed in :pr:`2179`
+  by :user:`Jérôme Dockès <jeromedockes>`.
+- An error that could arise in histograms when running :class:`TableReport` on
+  data with a very small range (less than 10 representable floating-point
+  numbers between min and max) has been fixed.
+  :pr:`2189` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------
@@ -78,6 +158,9 @@ New Features
 - A new dataframe generator, :func:`datasets.toy_cities`, has been added for
   use cases on dataframes with variable sizes and variable correlation between
   columns. :pr:`2042` by :user:`Eloi Massoulié <emassoulie>`.
+- A new selector function, :func:`selectors.drop`, has been added to drop columns
+  from a dataframe using a selector. It mirrors the behavior of :func:`selectors.select`.
+  :pr:`2108` by :user:`Mary Njoroge <Maryahcee>`.
 
 Changes
 -------
@@ -114,6 +197,9 @@ Changes
   <jeromedockes>`.
 - The ``exclude_cols`` of :meth:`DataOp.skb.apply` can now be a DataOp.
   :pr:`2050` by :user:`Jérôme Dockès <jeromedockes>`.
+- Skrub estimators now correctly show links to the documentation in the HTML
+  representation that is generated for notebooks. :pr:`2036` by :user:`Riccardo
+  Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
@@ -161,6 +247,9 @@ New Features
 - :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
+- Added a new dataset, :func:`fetch_electricity_usage`, which contains electricity usage data
+  for several French cities and corresponding weather data.
+  :pr:`2013` by :user:`Lisa McBride<lisaleemcb>`.
 
 
 Changes
