@@ -30,6 +30,7 @@ New Features
   Gómez Jiménez <gabrielapgomezji>`.
 - The transformer :class:`DurationToFloat` has been added. :pr:`2069` by
   :user:`Riccardo Cappuzzo <rcap107>`.
+
 **TableReport**:
 
 - :meth:`TableReport.json` now includes histogram data for numeric and datetime
