@@ -9,6 +9,26 @@ Release history
 Ongoing development
 ===================
 
+
+New Features
+------------
+
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Deprecations
+------------
+
+
+
+
+Release 0.10.0
+===================
+
 New Features
 ------------
 **Transformers**:
