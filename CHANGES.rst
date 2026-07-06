@@ -22,7 +22,7 @@ New Features
 - The :class:`DropSimilar` transformer has been added, for removing columns that
   present high correlation with other columns in a dataframe . :pr:`2023` by
   :user:`Eloi Massoulié <emassoulie>`.
-- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+- :class:`ToFloat` now allows users to specify ``decimal`` and ``thousand``
   separators to parse numerical columns that use formatting different from the default
   formatting used in Python, such as ``1'234,5``.
   Additionally, negative numbers indicated with parentheses can be converted to the
@@ -36,7 +36,8 @@ New Features
 - :meth:`TableReport.json` now includes histogram data for numeric and datetime
   columns (the bin count and edges, and numbers of low and high outliers). Now
   ``json()`` contains all the information shown in the report HTML rendering,
-  including the plots. The schema of the generated JSON is available at :ref:``.
+  including the plots. The schema of the generated JSON is available at
+  :ref:`table_report_json_schema`.
   :pr:`2164` by :user:`Jérôme Dockès <jeromedockes>`.
 - The :class:`TableReport` can now be exported in markdown format with
   :func:`~skrub.TableReport.markdown`.
@@ -51,8 +52,10 @@ New Features
   control respectively which scores, choices (params), and times (fit or score
   durations) should be included in the figure. :pr:`2202` by :user:`Jérôme
   Dockès <jeromedockes>`.
-- New methods :meth:`SkrubLearner.get_named_params` and
-  :meth:`SkrubLearner.set_named_params` allow getting and setting the outcomes for
+- New :class:`SkrubLearner` methods
+  :meth:`SkrubLearner.get_named_params` and
+  :meth:`SkrubLearner.set_named_params` allow getting and
+  setting the outcomes for
   choices contained in the DataOp, keyed by choice name. They provide a more
   robust way of transferring selected hyperparameters from one DataOp to a
   different one than :meth:`SkrubLearner.get_params` and
@@ -88,7 +91,8 @@ New Features
 
 Changes
 -------
-- :meth:`SkrubLearner.score` has been enhanced when the DataOp used
+- :class:`SkrubLearner`'s :meth:`SkrubLearner.score`
+  has been enhanced when the DataOp used
   :meth:`DataOp.skb.with_scoring`. During scoring, predict(), predict_proba()
   etc. are cached to avoid recomputation when multiple scorers are used (or one
   scorer calls them several times). Moreover it is possible to pass
