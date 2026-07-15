@@ -585,6 +585,10 @@ def test_randomized_search_with_scoring(randomized_search_backend):
     search.fit(split["train"])
     assert (search.results_["mean_test_neg_brier_score"] <= 0).all()
     assert list(search.score(split["test"]).keys()) == ["neg_brier_score", "roc_auc"]
+    # Test return_predictions is forwarded to best_learner_.score
+    scores, predictions = search.score(split["test"], return_predictions=True)
+    assert list(scores.keys()) == ["neg_brier_score", "roc_auc"]
+    assert predictions["predict_proba"].shape == (split["y_test"].shape[0], 2)
 
 
 def test_grid_search(data_op, data, n_jobs):
@@ -904,8 +908,14 @@ def test_train_test_split(with_y):
                 "n": 8,
                 "_skrub_X": [0, 1, 2, 3, 4, 5],
                 "_skrub_y": [8, 9, 10, 11, 12, 13],
+                "_skrub_is_preview_data_env": True,
             },
-            "test": {"n": 8, "_skrub_X": [6, 7], "_skrub_y": [14, 15]},
+            "test": {
+                "n": 8,
+                "_skrub_X": [6, 7],
+                "_skrub_y": [14, 15],
+                "_skrub_is_preview_data_env": True,
+            },
             "X_train": [0, 1, 2, 3, 4, 5],
             "X_test": [6, 7],
             "y_train": [8, 9, 10, 11, 12, 13],
@@ -913,8 +923,16 @@ def test_train_test_split(with_y):
         }
     else:
         assert split == {
-            "train": {"n": 8, "_skrub_X": [0, 1, 2, 3, 4, 5]},
-            "test": {"n": 8, "_skrub_X": [6, 7]},
+            "train": {
+                "n": 8,
+                "_skrub_X": [0, 1, 2, 3, 4, 5],
+                "_skrub_is_preview_data_env": True,
+            },
+            "test": {
+                "n": 8,
+                "_skrub_X": [6, 7],
+                "_skrub_is_preview_data_env": True,
+            },
             "X_train": [0, 1, 2, 3, 4, 5],
             "X_test": [6, 7],
         }
