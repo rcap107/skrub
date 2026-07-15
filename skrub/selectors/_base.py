@@ -82,7 +82,7 @@ def all():
     """Select all columns in a dataframe.
 
     This is the most general selector, matching every column regardless of name,
-    type, or content. It is useful as a starting point for building complex
+    type, or content. It is a useful starting point for building complex
     selections via operators, for example to select all columns except a specific
     subset.
 
@@ -451,8 +451,8 @@ def drop(df, selector):
     """Apply a selector to a dataframe and return it without the selected columns.
 
     This is the complement of ``select()``: it returns a new dataframe containing
-    all columns except those matched by the selector. Useful for removing unwanted
-    columns (identifiers, metadata, noise) before modeling or analysis.
+    all columns except those matched by the selector.
+
 
     Parameters
     ----------
@@ -588,7 +588,7 @@ class Selector:
     See Also
     --------
     skrub.ApplyToCols :
-        Apply a transformer to selected columns, use selectors for column selection.
+        Apply a transformer only to some columns, possibly selected by a selector.
     skrub.DataOp.skb.apply :
         Apply a transformer to selected columns in a DataOps workflow.
 
@@ -613,7 +613,7 @@ class Selector:
     >>> (s.numeric() & ~s.glob('*_ID')).expand(df)
     ['height_mm', 'width_mm']
 
-    Use in data transformations: apply a scaler only to numeric columns:
+    Use in data transformations, for example to apply a scaler only to numeric columns:
 
     >>> from skrub import ApplyToCols
     >>> from sklearn.preprocessing import StandardScaler
@@ -713,7 +713,7 @@ class Selector:
         Returns
         -------
         list of int
-            The indices (0-based positions) of columns from ``df`` that the
+            The indices (zero-indexed) of columns from ``df`` that the
             selector matches.
 
         See Also
@@ -918,6 +918,7 @@ def filter(predicate, *args, **kwargs):
     actual column object (pandas/polars Series) for inspection.
 
     This selector is useful in the following scenarios:
+
     - When built-in selectors don't match your selection criterion
     - To select columns based on column content properties (e.g., variance, range)
     - To select columns by custom statistics or computed properties
@@ -928,6 +929,7 @@ def filter(predicate, *args, **kwargs):
     predicate : callable
         A function that takes a column and optional extra arguments, returning
         ``True`` to select the column or ``False`` to exclude it.
+
         Signature: ``predicate(col, *args, **kwargs) -> bool``
     *args : tuple
         Extra positional arguments passed to the predicate.
@@ -970,8 +972,8 @@ def filter(predicate, *args, **kwargs):
     **Performance**: The predicate is called once per column, so operations on
     entire columns (not individual values) are efficient.
 
-    Operator combinations
-    ~~~~~~~~~~~~~~~~~~~~~
+    **Operator combinations**
+
     - ``s.filter(lambda col: col.std() > 1) & s.numeric()`` → Numeric cols with high
       variance
     - ``s.filter(lambda col: len(col) > 100) | s.string()`` → Wide columns or strings

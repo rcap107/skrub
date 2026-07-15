@@ -212,8 +212,8 @@ def numeric():
     """
     Select columns that have a numeric data type.
 
-    Use this selector to find all numeric columns for scaling, normalization,
-    or statistical analysis. This includes both integer and floating-point types
+    Use this selector to find all numeric columns.
+    This includes both integer and floating-point types
     but excludes Boolean columns (which often need different handling).
 
     This selector matches both integer and floating-point columns, equivalent to
@@ -265,7 +265,7 @@ def numeric():
     str_      ...
     dtype: object
 
-    Select all numeric columns (note: booleans are excluded):
+    Select all numeric columns:
 
     >>> s.select(df, s.numeric())
        f64  F64  i64  I64  i8
@@ -290,6 +290,7 @@ def integer():
     discrete numeric features or ID-like columns.
 
     This selector selects only integer columns but not Boolean columns.
+
     Note that ``integer() | float()`` is equivalent to :func:`numeric()`.
 
     Notes
@@ -338,7 +339,7 @@ def integer():
     str_      ...
     dtype: object
 
-    Select all integer columns (note: booleans are excluded):
+    Select all integer columns:
 
     >>> s.select(df, s.integer())
        i64  I64  i8
@@ -358,11 +359,12 @@ def float():
     """
     Select columns that have a floating-point data type.
 
-    Use this selector when you specifically need floating-point-typed columns,
+    Use this selector when you specifically need columns of floating-point type,
     excluding integer and Boolean types. This is useful for selecting continuous
     numeric features that have been measured or calculated as decimals.
 
     This selector selects floating-point columns (float32, float64, etc.).
+
     Note that ``integer() | float()`` is equivalent to :func:`numeric()`.
 
     See Also
@@ -446,8 +448,7 @@ def has_dtype(*dtypes):
     Parameters
     ----------
     *dtypes : dtype objects
-        One or more dtype objects to match. The most reliable approach is to get
-        dtypes from existing columns in your dataframe.
+        One or more dtype objects to match.
 
     See Also
     --------
@@ -501,7 +502,7 @@ def any_date():
     """
     Select columns that have a Date or Datetime data type.
 
-    Use this selector to find temporal columns that need date-specific
+    Use this selector when you specifically need floating-point-typed columns,
     preprocessing, such as feature extraction (year, month, day) or
     time-based aggregations.
 
@@ -510,9 +511,13 @@ def any_date():
 
     Notes
     -----
-    Behavior may differ between pandas and polars:
-    - Pandas: Selects datetime64 dtype columns
-    - Polars: Selects both Date and Datetime dtypes
+
+    .. warning::
+
+      Behavior may differ between pandas and polars:
+
+      - Pandas: Selects datetime64 dtype columns
+      - Polars: Selects both Date and Datetime dtypes
 
     See Also
     --------
@@ -645,24 +650,26 @@ def categorical():
 
 def string():
     """
-    Select columns that have a String data type.
+    Select columns that have a string data type.
 
-    Use this selector to find all text columns for encoding, NLP processing,
-    or text-based feature engineering. This includes both explicit string dtypes
-    and object columns containing only strings.
+    Use this selector to find all text columns. This includes both explicit string
+    dtypes and object columns containing only strings.
 
     In pandas, object columns containing (only) strings are also selected.
 
     Notes
     -----
-    The behavior of string columns may change depending on the pandas version:
 
-    - Before pandas 3.0: String columns may have the 'object' dtype
-    - From pandas 3.0 onwards: String columns have only the 'string' dtype
+    .. warning::
 
-    This selector handles both cases, selecting string columns regardless of
-    pandas version. Object columns containing mixed types (e.g., strings and
-    numbers) are not selected.
+      The behavior of string columns may change depending on the pandas version:
+
+      - Before pandas 3.0: String columns may have the 'object' dtype
+      - From pandas 3.0 onwards: String columns have only the 'string' dtype
+
+      This selector handles both cases, selecting string columns regardless of
+      pandas version. Object columns containing mixed types (e.g., strings and
+      numbers) are not selected.
 
     See Also
     --------
@@ -720,9 +727,17 @@ def object():
 
     Notes
     -----
-    Before pandas 3.0, columns containing only strings can have the ``object``
-    dtype. From pandas 3.0 onwards they have the ``string`` dtype instead.
-    Use :func:`string` for selecting string columns across pandas versions.
+
+    .. warning::
+
+      The behavior of string columns may change depending on the pandas version:
+
+      - Before pandas 3.0: String columns may have the 'object' dtype
+      - From pandas 3.0 onwards: String columns have only the 'string' dtype
+
+      This selector handles both cases, selecting string columns regardless of
+      pandas version. Object columns containing mixed types (e.g., strings and
+      numbers) are not selected.
 
     The object dtype is broader and less semantic than :func:`string` - it
     can contain any mix of types. Use :func:`object` only when you specifically
@@ -755,7 +770,7 @@ def object():
     string         ...
     dtype: object
 
-    Select object dtype columns (note: may contain mixed types):
+    Select object dtype columns (note: can contain mixed types):
 
     >>> s.select(df, s.object())
       mixed
@@ -778,11 +793,7 @@ def boolean():
 
     **When to use:**
     Use this selector to find Boolean columns that often need special handling
-    (e.g., encoding strategies different from numeric features). Boolean features
-    represent binary choices and may require different preprocessing than numeric
-    features.
-
-    Selects columns with bool or boolean dtypes across different dataframe libraries.
+    (e.g., encoding strategies different from numeric features).
 
     Notes
     -----
@@ -824,7 +835,7 @@ def boolean():
        bool_  Bool_
     0   True  False
 
-    Combine with numeric() to include both (note: boolean() is separate):
+    Combine with numeric() to include both:
 
     >>> s.select(df, s.boolean() | s.numeric())
        i64  i8  bool_  Bool_
@@ -873,7 +884,10 @@ def cardinality_below(threshold):
     -----
     **Performance Consideration:** This selector requires computing the number
     of unique values for each column. On large datasets (>1M rows), this may
-    be slow. Consider using on a sample if performance is critical.
+    be slow. Consider using on a subsample of data if performance is critical.
+
+    Missing values do not count as unique values for cardinality. For example,
+    a column with values `[1, 2, 2, None]` has a cardinality of 2.
 
     See Also
     --------
@@ -962,8 +976,8 @@ def has_nulls(proportion=0.0):
     values above a given threshold.
 
     **When to use:**
-    Use this selector to identify columns needing imputation or to find columns
-    with excessive missing data for exclusion. This is useful for data quality
+    Use this selector to identify columns needing imputation or
+    with excessive missing data. This is useful for data quality
     checks and preprocessing pipelines.
 
     Parameters
