@@ -480,14 +480,14 @@ def has_dtype(*dtypes):
 
     Get dtype from an existing column and use it for selection:
 
-    >>> items_dtype = df["items"].dtype
-    >>> s.select(df, s.has_dtype(items_dtype))
+    >>> s.select(df, s.has_dtype(df["items"].dtype))
            items
     0  [A4, A3]
     1      [A5]
 
     Match multiple dtypes at once:
 
+    >>> items_dtype = df["items"].dtype
     >>> count_dtype = df["count"].dtype
     >>> s.select(df, s.has_dtype(items_dtype, count_dtype))
            items  count
