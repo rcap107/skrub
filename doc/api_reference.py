@@ -151,6 +151,7 @@ API_REFERENCE = {
                     "selectors.cardinality_below",
                     "selectors.categorical",
                     "selectors.cols",
+                    "selectors.drop",
                     "selectors.filter",
                     "selectors.filter_names",
                     "selectors.float",
@@ -164,7 +165,6 @@ API_REFERENCE = {
                     "selectors.object",
                     "selectors.regex",
                     "selectors.select",
-                    "selectors.drop",
                     "selectors.string",
                 ],
             }
