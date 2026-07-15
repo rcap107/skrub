@@ -404,7 +404,6 @@ def drop(df, selector):
     This is the complement of ``select()``: it returns a new dataframe containing
     all columns except those matched by the selector.
 
-
     Parameters
     ----------
     df : dataframe
@@ -483,10 +482,6 @@ class Selector:
     enable delayed selection: you can define a selection rule before the data
     is available.
 
-    This class is not meant to be instantiated manually. Create selectors using
-    builder functions such as :func:`skrub.selectors.all()`,
-    :func:`skrub.selectors.glob()`, :func:`skrub.selectors.filter()`, etc.
-
     For each column in a dataframe, a selector evaluates the ``_matches(column)``
     method:
 
@@ -503,11 +498,17 @@ class Selector:
 
     **Combining Selectors**
 
-    Selectors can be combined with operators to create complex selection rules:
+    Selectors can be combined with set operators to create complex selection rules:
 
     - ``s.numeric() | s.boolean()`` - numeric OR boolean columns
     - ``s.all() - s.glob('*_id')`` - all columns except ID-like ones
     - ``s.string() & ~s.cardinality_below(10)`` - high-cardinality string columns
+
+    .. note::
+
+        This class is not meant to be instantiated manually. Create selectors using
+        builder functions such as :func:`skrub.selectors.all()`,
+        :func:`skrub.selectors.glob()`, :func:`skrub.selectors.filter()`, etc.
 
     See Also
     --------

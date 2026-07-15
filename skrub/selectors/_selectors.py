@@ -97,8 +97,9 @@ def regex(pattern, flags=0):
 
     Use this selector for complex name patterns that glob patterns cannot express.
     This is useful for selecting columns with specific naming conventions or
-    patterns that require regular expression features (e.g., columns matching
-    '^feature_[0-9]+$'). For simple wildcard patterns, prefer :func:`glob`.
+    patterns that glob patterns cannot express, so that regular expressions are
+    needed (e.g., columns matching '^feature_[0-9]+$').
+    For simple wildcard patterns, prefer :func:`glob`.
 
     Parameters
     ----------
@@ -200,9 +201,8 @@ def numeric():
     """
     Select columns that have a numeric data type.
 
-    Use this selector to find all numeric columns.
-    This includes both integer and floating-point types
-    but excludes Boolean columns (which often need different handling).
+    Numeric columns include both integer and floating-point types,
+    but exclude Boolean columns.
 
     This selector matches both integer and floating-point columns, equivalent to
     ``integer() | float()``.
@@ -276,8 +276,6 @@ def integer():
     Use this selector when you specifically need integer-typed columns,
     excluding floating-point and Boolean types. This is useful for selecting
     discrete numeric features or ID-like columns.
-
-    This selector selects only integer columns but not Boolean columns.
 
     Note that ``integer() | float()`` is equivalent to :func:`numeric()`.
 
@@ -484,12 +482,9 @@ def any_date():
     """
     Select columns that have a Date or Datetime data type.
 
-    Use this selector when you specifically need floating-point-typed columns,
-    preprocessing, such as feature extraction (year, month, day) or
-    time-based aggregations.
-
-    This selector matches Datetime columns, including timezone-aware datetime
-    columns.
+    Use this selector to select only date/datetime columns (including timezone-aware
+    datetime columns), for example to perform
+    time-based feature engineering, filtering, or analysis.
 
     Notes
     -----
@@ -508,6 +503,9 @@ def any_date():
 
     skrub.ToDatetime :
         Convert string columns to datetime types.
+
+    skrub.DatetimeEncoder :
+        Encode datetime columns into numeric features for machine learning.
 
     Examples
     --------
@@ -567,9 +565,8 @@ def categorical():
     """
     Select columns that have a Categorical (or polars Enum) data type.
 
-    Use this selector to find categorical columns with an explicitly defined
-    set of categories. This is useful for identifying columns ready for
-    encoding or that contain discrete, predefined values.
+    Use this selector to find columns with an explicitly defined
+    set of categories.
 
     Note that categorical columns are different from string columns: categorical
     columns have a fixed set of category values, while string columns contain
@@ -579,10 +576,8 @@ def categorical():
     --------
     string :
         Select string columns.
-        Use this for columns with arbitrary text values.
     cardinality_below :
-        Select columns with low cardinality.
-        Use this if you have text columns without explicit categories.
+        Select columns with low cardinality (low number of unique values).
     skrub.ToCategorical :
         Convert a column to categorical type for explicit category handling.
 
@@ -633,9 +628,6 @@ def categorical():
 def string():
     """
     Select columns that have a string data type.
-
-    Use this selector to find all text columns. This includes both explicit string
-    dtypes and object columns containing only strings.
 
     In pandas, object columns containing (only) strings are also selected.
 
@@ -702,10 +694,10 @@ def object():
     """
     Select columns whose dtype is ``object`` (pandas) or ``pl.Object`` (polars).
 
-    **When to use:**
-    Use this selector to find columns with the object dtype, which may contain
-    mixed types. For standard use cases, prefer more specific selectors like
-    :func:`string` or :func:`categorical`.
+    Note that object columns may contain mixed types (e.g., strings and numbers) and are
+    broader than string columns. Use this selector when you specifically need
+    object-typed columns, and prefer more specific selectors like :func:`string`
+    or :func:`categorical`.
 
     Notes
     -----
@@ -773,18 +765,6 @@ def boolean():
     """
     Select columns that have a Boolean data type.
 
-    **When to use:**
-    Use this selector to find Boolean columns that often need special handling
-    (e.g., encoding strategies different from numeric features).
-
-    Notes
-    -----
-    Boolean columns are excluded from :func:`numeric` because they typically
-    require different preprocessing strategies than numeric features:
-
-    - Numeric: Usually need scaling/normalization
-    - Boolean: Usually need encoding (binary representation)
-
     See Also
     --------
     numeric :
@@ -851,10 +831,9 @@ def cardinality_below(threshold):
     Select columns whose cardinality (number of unique values) is (strictly) \
     below ``threshold``.
 
-    **When to use:**
-    Use this selector to identify low-cardinality (discrete) features for
-    categorical encoding or to find ID-like columns with high cardinality for
-    exclusion. This is useful for feature engineering and data quality checks.
+    This selector is useful for identifying low-cardinality (discrete) features for
+    categorical encoding or for finding ID-like columns with high cardinality for
+    exclusion.
 
     Parameters
     ----------
@@ -957,7 +936,6 @@ def has_nulls(proportion=0.0):
     Select columns that contain at least one null value, or a proportion of null \
     values above a given threshold.
 
-    **When to use:**
     Use this selector to identify columns needing imputation or
     with excessive missing data. This is useful for data quality
     checks and preprocessing pipelines.
@@ -1007,20 +985,12 @@ def has_nulls(proportion=0.0):
     1   ...     b
     2  20.0  ...
 
-    Select columns with >20% missing values:
+    Select columns with >50% missing values:
 
     >>> df2 = pd.DataFrame(dict(
     ...     few_nulls=[1, 2, 3, None],
     ...     many_nulls=[1, None, None, None],
     ...     no_nulls=[1, 2, 3, 4]))
-    >>> s.select(df2, s.has_nulls(proportion=0.2))
-       few_nulls  many_nulls
-    0        1.0         1.0
-    1        2.0         ...
-    2        3.0         ...
-    3        ...         ...
-
-    Select columns with >50% missing values:
 
     >>> s.select(df2, s.has_nulls(proportion=0.5))
     many_nulls
