@@ -29,11 +29,6 @@ __all__ = [
 def glob(pattern):
     """Select columns by name with Unix shell style 'glob' pattern.
 
-    Use this selector for simple wildcard patterns on column names.
-    This is useful for selecting columns with predictable naming patterns
-    (e.g., all columns ending in '_mm', or starting with 'feature_').
-    For more complex patterns, consider :func:`regex`.
-
     Pattern matching is case-sensitive and interpreted as described in
     ``fnmatch.fnmatchcase``::
 
@@ -67,13 +62,6 @@ def glob(pattern):
     ...         "ID": [4, 3],
     ...     }
     ... )
-
-    Select all columns with a simple wildcard:
-
-    >>> s.select(df, s.glob('*'))
-       height_mm  width_mm kind  ID
-    0      297.0     210.0   A4   4
-    1      420.0     297.0   A3   3
 
     Select columns matching a pattern:
 
@@ -357,13 +345,7 @@ def integer():
 
 def float():
     """
-    Select columns that have a floating-point data type.
-
-    Use this selector when you specifically need columns of floating-point type,
-    excluding integer and Boolean types. This is useful for selecting continuous
-    numeric features that have been measured or calculated as decimals.
-
-    This selector selects floating-point columns (float32, float64, etc.).
+    Select columns that have a floating-point data type (float32, float64, etc.)
 
     Note that ``integer() | float()`` is equivalent to :func:`numeric()`.
 
