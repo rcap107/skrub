@@ -477,6 +477,7 @@ class Selector:
     criteria (data type, name pattern, content properties, etc.). Selectors
     enable delayed selection: you can define a selection rule before the data
     is available.
+
     **How to use selectors**
 
     - **Direct selection:** ``s.select(df, selector)`` returns a filtered dataframe
@@ -812,12 +813,10 @@ def filter(predicate, *args, **kwargs):
     as input the column (a pandas or polars Series) and must return True if it
     should be selected and False otherwise.
 
-    This selector is useful:
-
-    - When built-in selectors don't match your selection criterion
-    - To select columns based on column content properties (e.g., variance, range)
-    - To select columns by custom statistics or computed properties
-    - To combine multiple custom criteria in a single predicate
+    For example, this selector can be used when built-in selectors don't match
+    your selection criterion, to select columns based on their content or computed
+    properties (e.g., variance, range...), or to combine multiple criteria in a
+    single predicate.
 
     Parameters
     ----------

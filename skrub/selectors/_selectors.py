@@ -456,18 +456,14 @@ def any_date():
 
     Notes
     -----
-
-    .. warning::
-
-      Behavior may differ between pandas and polars:
-
-      - Pandas: Selects datetime64 dtype columns
-      - Polars: Selects both Date and Datetime dtypes
-
     Only datetime columns are selected. Time-only, period, and duration types are
     not selected.
     Selection is based on the column's dtype: for example string columns containing
     date-like values are not selected.
+
+    Selected columns depend on the dataframe library and its supported dtypes:
+    in pandas, this selector selects columns with dtype ``datetime64[ns]``,
+    while in polars, it selects both ``Date`` and ``Datetime`` dtypes.
 
     See Also
     --------
@@ -805,10 +801,6 @@ def cardinality_below(threshold):
 
     Notes
     -----
-    This selector requires computing the number
-    of unique values for each column. On large datasets (>1M rows), this may
-    be slow.
-
     Missing values do not count as unique values for cardinality. For example,
     a column with values `[1, 2, 2, None]` has a cardinality of 2.
 
