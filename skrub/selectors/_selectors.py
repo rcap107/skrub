@@ -504,6 +504,11 @@ def any_date():
       - Pandas: Selects datetime64 dtype columns
       - Polars: Selects both Date and Datetime dtypes
 
+    Only datetime columns are selected. Time-only, period, and duration types are
+    not selected.
+    String columns containing date-like values are not selected either, and
+    should be converted to datetime types first.
+
     See Also
     --------
     skrub.Cleaner :
@@ -714,16 +719,12 @@ def object():
 
       The behavior of string columns may change depending on the pandas version:
 
-      - Before pandas 3.0: String columns may have the 'object' dtype
-      - From pandas 3.0 onwards: String columns have only the 'string' dtype
+      - Before pandas 3.0: String columns may have the ``object`` dtype
+      - From pandas 3.0 onwards: String columns have only the ``string`` dtype
 
-      This selector handles both cases, selecting string columns regardless of
-      pandas version. Object columns containing mixed types (e.g., strings and
-      numbers) are not selected.
-
-    The object dtype is broader and less semantic than :func:`string` - it
-    can contain any mix of types. Use :func:`object` only when you specifically
-    need mixed-type columns.
+    This selector selects **all** ``object`` dtype columns regardless of content,
+    including mixed-type columns. For text data, prefer :func:`string` which is
+    more selective.
 
     See Also
     --------
@@ -857,6 +858,9 @@ def cardinality_below(threshold):
 
     Missing values do not count as unique values for cardinality. For example,
     a column with values `[1, 2, 2, None]` has a cardinality of 2.
+
+    If unique value counting fails for a column (e.g., due to unsupported data types),
+    the column is not selected.
 
     See Also
     --------

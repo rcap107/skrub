@@ -130,6 +130,10 @@ def all():
 def cols(*columns):
     """Select the columns whose names are explicitly listed.
 
+    The selected columns are returned in the order they are listed in ``columns``,
+    not the order they appear in the dataframe. If any of the requested columns are
+    missing from the dataframe, an exception is raised.
+
     See Also
     --------
     all : Select all columns
@@ -200,6 +204,12 @@ def inv(obj):
     See Also
     --------
     all : Select all columns
+
+    Notes
+    -----
+    ``inv`` is primarily a convenience function. When working with a single
+    selector or column name, ``~selector`` may be more readable. When excluding
+    from the full set of columns, ``all() - selector`` is more explicit.
 
     Examples
     --------
@@ -870,6 +880,9 @@ def filter(predicate, *args, **kwargs):
         # NOT picklable (closure)
         prefix = 'test'
         s.filter(lambda col: str(col.name).startswith(prefix))
+
+    For name-based selection, consider using :func:`filter_names`, :func:`glob`,
+    or :func:`regex` instead of ``filter`` for simpler selection.
 
     **Performance**: The predicate is called once per column. Depending on the
     size of the column and the specific operation, this may be expensive.
