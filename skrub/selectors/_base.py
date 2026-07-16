@@ -121,7 +121,7 @@ def all():
 
 
 def cols(*columns):
-    """Select the columns whose names are explicitly listed.
+    """Select columns by name.
 
     The selected columns are returned in the order they are listed in ``columns``,
     not the order they appear in the dataframe. If any of the requested columns are
@@ -849,8 +849,7 @@ def filter(predicate, *args, **kwargs):
     The column is kept if ``predicate`` returns ``True``.
 
     To pickle the selector, use importable functions as predicates
-    rather than lambdas or closures. Pass parameters via ``*args`` or ``**kwargs``
-    instead of capturing them in a closure::
+    rather than lambdas. Prefer passing parameters via ``*args`` or ``**kwargs``:
 
         # Picklable (importable function + explicit args)
         s.filter(str.startswith, 'prefix')
@@ -865,11 +864,6 @@ def filter(predicate, *args, **kwargs):
 
     For name-based selection, consider using :func:`filter_names`, :func:`glob`,
     or :func:`regex` instead of ``filter`` for simpler selection.
-
-    **Performance**: The predicate is called once per column. Depending on the
-    size of the column and the specific operation, this may be expensive.
-    For large datasets, consider subsampling the data or using vectorized operations
-    if possible.
 
     Examples
     --------
@@ -919,6 +913,11 @@ def filter(predicate, *args, **kwargs):
        height_mm
     0      297.0
     1      420.0
+
+    Note that ``s.numeric()`` short-circuits the evaluation of ``has_high_range``
+    for non-numeric columns, so the predicate is only called for numeric columns,
+    avoiding errors on string columns.
+
     """
     return Filter(predicate, args=args, kwargs=kwargs)
 
@@ -935,17 +934,8 @@ class NameFilter(Filter):
 def filter_names(predicate, *args, **kwargs):
     r"""Select columns based only on their name (not content or type).
 
-    This is a specialized version of ``filter`` that passes only the column name
-    (a string) to the predicate, rather than the column itself. Use this when
-    your selection logic depends only on naming patterns, not data values.
-
-    This selector is useful to:
-
-    - Select columns matching regex patterns (consider using ``glob()`` or ``regex()``
-      for simple patterns)
-    - Check column names for prefixes, suffixes, or substrings
-    - Filter by naming conventions (e.g., 'internal_*', 'tmp_*')
-    - Custom naming-based logic that doesn't involve column data
+    The predicate takes as input the column name and must return True if it
+    should be selected and False otherwise.
 
     Parameters
     ----------
@@ -963,8 +953,8 @@ def filter_names(predicate, *args, **kwargs):
     Returns
     -------
     Selector
-        A ``NameFilter`` selector that matches columns where ``predicate(name)``
-        returns ``True``.
+        A ``NameFilter`` selector that matches columns where
+        ``predicate(name, *args, **kwargs)`` returns ``True``.
 
     See Also
     --------
@@ -984,7 +974,7 @@ def filter_names(predicate, *args, **kwargs):
     - ``s.regex(r'col_\d+')`` instead of ``s.filter_names(lambda n: re.match(...))``
 
     To pickle the selector, use importable functions as predicates
-    rather than lambdas or closures. Pass parameters via ``*args`` or ``**kwargs``::
+    rather than lambdas. Pass parameters via ``*args`` or ``**kwargs``::
 
         # Picklable (importable function + explicit args)
         s.filter_names(str.endswith, '_mm')

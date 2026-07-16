@@ -118,11 +118,6 @@ def regex(pattern, flags=0):
     filter_names :
         Select columns based on custom name-based criteria.
 
-    Notes
-    -----
-    A column is selected if ``re.match(col_name, pattern, flags)`` returns a match.
-    Note that ``re.match`` only matches at the beginning of the string. Use '$' at
-    the end to require matching until the end of the column name.
 
     Examples
     --------
@@ -144,38 +139,11 @@ def regex(pattern, flags=0):
     0      297.0     210.0
     1      420.0     297.0
 
-    Match at the beginning of the column name (no need for ^ prefix):
-
-    >>> s.select(df, s.regex('wid'))
-       width_mm
-    0     210.0
-    1     297.0
-
-    Use '$' to require matching until the end of the column name:
-
-    >>> s.select(df, s.regex('wid$'))
-    Empty DataFrame
-    Columns: []
-    Index: [0, 1]
-
-    Use regex flags for case-insensitive matching:
+    Use regex flags for case-insensitive matching (refer to the regex docs for
+    more detail):
 
     >>> import re
     >>> s.select(df, s.regex('id', flags=re.I))
-       ID
-    0   4
-    1   3
-
-    Flags can also be embedded in the pattern:
-
-    >>> s.select(df, s.regex('(?i)id'))
-       ID
-    0   4
-    1   3
-
-    Or use a compiled pattern:
-
-    >>> s.select(df, s.regex(re.compile('id', re.I)))
        ID
     0   4
     1   3
@@ -268,11 +236,8 @@ def integer():
     """
     Select columns that have an integer data type.
 
-    Use this selector when you specifically need integer-typed columns,
-    excluding floating-point and Boolean types. This is useful for selecting
-    discrete numeric features or ID-like columns.
-
-    Note that ``integer() | float()`` is equivalent to :func:`numeric()`.
+    Boolean columns are not matched by this selector, only signed and unsigned
+    ints are.
 
     See Also
     --------
@@ -334,8 +299,6 @@ def integer():
 def float():
     """
     Select columns that have a floating-point data type (float32, float64, etc.)
-
-    Note that ``integer() | float()`` is equivalent to :func:`numeric()`.
 
     See Also
     --------
@@ -490,9 +453,6 @@ def any_date():
     """
     Select columns that have a Date or Datetime data type.
 
-    Use this selector to select only date/datetime columns (including timezone-aware
-    datetime columns), for example to perform
-    time-based feature engineering, filtering, or analysis.
 
     Notes
     -----
@@ -506,8 +466,8 @@ def any_date():
 
     Only datetime columns are selected. Time-only, period, and duration types are
     not selected.
-    String columns containing date-like values are not selected either, and
-    should be converted to datetime types first.
+    Selection is based on the column's dtype: for example string columns containing
+    date-like values are not selected.
 
     See Also
     --------
@@ -577,13 +537,6 @@ def any_date():
 def categorical():
     """
     Select columns that have a Categorical (or polars Enum) data type.
-
-    Use this selector to find columns with an explicitly defined
-    set of categories.
-
-    Note that categorical columns are different from string columns: categorical
-    columns have a fixed set of category values, while string columns contain
-    arbitrary text.
 
     See Also
     --------
@@ -852,9 +805,9 @@ def cardinality_below(threshold):
 
     Notes
     -----
-    **Performance Consideration:** This selector requires computing the number
+    This selector requires computing the number
     of unique values for each column. On large datasets (>1M rows), this may
-    be slow. Consider using on a subsample of data if performance is critical.
+    be slow.
 
     Missing values do not count as unique values for cardinality. For example,
     a column with values `[1, 2, 2, None]` has a cardinality of 2.
@@ -917,8 +870,6 @@ def cardinality_below(threshold):
     2     1     2     2     3     3   3
     3  <NA>  <NA>     2  <NA>     3   4
 
-    Note that numeric features are still treated as numeric even if they have low
-    cardinality (e.g., IDs).
     """
     return Filter(_cardinality_below, args=(threshold,), name="cardinality_below")
 
@@ -956,7 +907,7 @@ def has_nulls(proportion=0.0):
     Behavior:
 
     - pandas: Recognizes np.nan, None, pd.NA, pd.NaT
-    - polars: Recognizes null values
+    - polars: Recognizes null values, and NaNs are treated as nulls.
 
     See Also
     --------
