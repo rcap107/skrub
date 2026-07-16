@@ -528,9 +528,10 @@ class Selector:
     >>> s.numeric().expand(df)
     ['height_mm', 'width_mm', 'ID']
 
-    Combine selectors for complex rules:
+    Selectors can be combined to create complex selection rules. For example,
+    to select numeric columns but exclude the 'ID' column:
 
-    >>> (s.numeric() & ~s.glob('*_ID')).expand(df)
+    >>> (s.numeric() & ~s.cols('ID')).expand(df)
     ['height_mm', 'width_mm']
 
     Use in data transformations, for example to apply a scaler only to numeric columns:
@@ -538,9 +539,9 @@ class Selector:
     >>> from skrub import ApplyToCols
     >>> from sklearn.preprocessing import StandardScaler
     >>> ApplyToCols(StandardScaler(), cols=s.numeric()).fit_transform(df)
-       height_mm  width_mm  ID  kind
-    0       -1.0      -1.0   4    A4
-    1        1.0       1.0   3    A3
+    kind  height_mm  width_mm   ID
+    0   A4       -1.0      -1.0  1.0
+    1   A3        1.0       1.0 -1.0
     """
 
     def _matches(self, col):
@@ -920,9 +921,9 @@ def filter(predicate, *args, **kwargs):
     ...     return col.max() - col.min() > 100
 
     >>> s.select(df, s.numeric() & s.filter(has_high_range))
-       height_mm  width_mm
-    0      297.0     210.0
-    1      420.0     297.0
+       height_mm
+    0      297.0
+    1      420.0
     """
     return Filter(predicate, args=args, kwargs=kwargs)
 

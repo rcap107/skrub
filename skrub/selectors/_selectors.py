@@ -529,6 +529,7 @@ def any_date():
     ...         ],
     ...         str_=["2020-03-02 10:30:00"],
     ...     )
+    ... )
     >>> df
                        dt                      tzdt                 str_
     0 2020-03-02 10:30:00 2020-03-02 10:30:00+00:00  2020-03-02 10:30:00
@@ -536,9 +537,8 @@ def any_date():
     >>> df.dtypes
     dt           datetime64[...]
     tzdt    datetime64[..., UTC]
-    str_                 ...
+    str_                     ...
     dtype: object
-    ... )
 
     Select all date/datetime columns:
 
