@@ -523,7 +523,7 @@ class Selector:
     Selectors can be combined to create complex selection rules. For example,
     to select numeric columns but exclude the 'ID' column:
 
-    >>> (s.numeric() & ~s.cols('ID')).expand(df)
+    >>> (s.numeric() - 'ID').expand(df)
     ['height_mm', 'width_mm']
 
     Use in data transformations, for example to apply a scaler only to numeric columns:
@@ -554,7 +554,7 @@ class Selector:
         raise NotImplementedError()
 
     def expand(self, df):
-        """Get the list of column names that the selector would select.
+        """Get the names of columns matched by the selector in a list.
 
         This method evaluates the selector's matching criteria against each column
         in the dataframe and returns the names of columns that match. This can be
@@ -606,7 +606,7 @@ class Selector:
         return matching_col_names
 
     def expand_index(self, df):
-        """Get the indices of columns that the selector would select.
+        """Get the indices of columns matched by the selector in a list.
 
         This method evaluates the selector against each column and returns the
         positional indices (0, 1, 2, ...) of matching columns instead of their names.
