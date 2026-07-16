@@ -98,7 +98,7 @@ def regex(pattern, flags=0):
     Use this selector for complex name patterns that glob patterns cannot express.
     This is useful for selecting columns with specific naming conventions or
     patterns that glob patterns cannot express, so that regular expressions are
-    needed (e.g., columns matching '^feature_[0-9]+$').
+    needed (e.g., columns matching ``'^feature_[0-9]+$'``).
     For simple wildcard patterns, prefer :func:`glob`.
 
     Parameters
@@ -962,10 +962,10 @@ def has_nulls(proportion=0.0):
     --------
     cardinality_below :
         Select columns whose cardinality is below a threshold.
-    DropUninformative :
+    skrub.DropUninformative :
         Automatically drop columns that are uninformative, including columns with
         more null values than a specified threshold.
-    Cleaner :
+    skrub.Cleaner :
         Parse common null representations (e.g., 'NA', 'missing') into proper null
         values, and possibly drop columns with excessive nulls.
     filter :
@@ -1018,7 +1018,7 @@ def has_nulls(proportion=0.0):
     2        3
     3        4
 
-    Use :class:`Cleaner` to parse common null representations
+    Use :class:`skrub.Cleaner` to parse common null representations
     into proper null values before selection:
 
     >>> df3 = pd.DataFrame(dict(

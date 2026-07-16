@@ -497,7 +497,7 @@ class Selector:
 
     1. **Direct selection:** ``s.select(df, selector)`` returns a filtered dataframe
     2. **With :class:`skrub.ApplyToCols`:** ``ApplyToCols(transformer, cols=selector)``
-      applies a transformer to selected columns
+       applies a transformer to selected columns
     3. **In DataOps:** ``skrub.X(df).skb.apply(transformer, cols=selector)``
     4. **Manual expansion:** ``selector.expand(df)`` gets column names for manual use
 
