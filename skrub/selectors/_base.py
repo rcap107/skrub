@@ -310,10 +310,9 @@ def _select_col_names_polars(df, col_names):
 
 
 def select(df, selector):
-    """Apply a selector to a dataframe and return the selected columns.
+    """Select the columns of a dataframe that are matched by the selector.
 
-    It evaluates a selector against a specific dataframe and returns a new
-    dataframe containing only the columns matched by the selector.
+    This function returns a new dataframe containing only the columns of `df` matched by `selector`.
 
     Parameters
     ----------
@@ -326,7 +325,6 @@ def select(df, selector):
     -------
     dataframe
         A new dataframe containing only the columns matched by the selector.
-        The column order matches the selector's expansion order.
 
     See Also
     --------
