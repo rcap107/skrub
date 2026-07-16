@@ -395,7 +395,7 @@ def select(df, selector):
 
 
 def drop(df, selector):
-    """Apply a selector to a dataframe and return it without the selected columns.
+    """Select the columns of a dataframe that are NOT matched by the selector.
 
     This is the complement of ``select()``: it returns a new dataframe containing
     all columns except those matched by the selector.
@@ -456,7 +456,6 @@ def drop(df, selector):
       kind  ID
     0   A5   5
     1   A4   4
-
     Preserve only certain types (via drop):
 
     >>> s.drop(df, s.all() - s.string())
