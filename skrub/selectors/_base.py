@@ -116,13 +116,6 @@ def all():
        height_mm  width_mm kind
     0      297.0     210.0   A4
     1      420.0     297.0   A3
-
-    Combine with type selectors:
-
-    >>> s.select(df, s.all() & s.numeric())
-       height_mm  width_mm  ID
-    0      297.0     210.0   4
-    1      420.0     297.0   3
     """
     return All()
 
