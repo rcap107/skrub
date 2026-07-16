@@ -312,7 +312,8 @@ def _select_col_names_polars(df, col_names):
 def select(df, selector):
     """Select the columns of a dataframe that are matched by the selector.
 
-    This function returns a new dataframe containing only the columns of `df` matched by `selector`.
+    This function returns a new dataframe containing only the columns of `df`
+    matched by `selector`.
 
     Parameters
     ----------
@@ -470,41 +471,32 @@ def drop(df, selector):
 
 
 class Selector:
-    """Generic selector type that selects columns from a dataframe.
+    """Pattern for matching columns in a dataframe.
 
     A ``Selector`` is a reusable rule for selecting columns based on various
     criteria (data type, name pattern, content properties, etc.). Selectors
     enable delayed selection: you can define a selection rule before the data
     is available.
-
-    For each column in a dataframe, a selector evaluates the ``_matches(column)``
-    method:
-
-    - ``_matches`` returns ``True`` → column is selected
-    - ``_matches`` returns ``False`` → column is excluded
-
     **How to use selectors**
 
-    1. **Direct selection:** ``s.select(df, selector)`` returns a filtered dataframe
-    2. **With :class:`skrub.ApplyToCols`:** ``ApplyToCols(transformer, cols=selector)``
-       applies a transformer to selected columns
-    3. **In DataOps:** ``skrub.X(df).skb.apply(transformer, cols=selector)``
-    4. **Manual expansion:** ``selector.expand(df)`` gets column names for manual use
+    - **Direct selection:** ``s.select(df, selector)`` returns a filtered dataframe
+    - **With :class:`skrub.ApplyToCols`:** ``ApplyToCols(transformer, cols=selector)``
+      applies a transformer to selected columns
+    - **In DataOps:** ``skrub.X(df).skb.apply(transformer, cols=selector)``
+    - **Manual expansion:** ``selector.expand(df)`` gets column names for manual use
 
     **Combining Selectors**
 
     Selectors can be combined with set operators to create complex selection rules:
 
     - ``s.numeric() | s.boolean()`` - numeric OR boolean columns
-    - ``s.all() - s.glob('*_id')`` - all columns except ID-like ones
-    - ``s.string() & ~s.cardinality_below(10)`` - high-cardinality string columns
+    - ``s.all() - s.glob('*_id')`` - all columns except those whose name ends with "_id"
+    - ``~s.cardinality_below(10)`` - high-cardinality columns
 
     .. note::
 
         This class is not meant to be instantiated manually. Create selectors using
         builder functions such as :func:`skrub.selectors.all()`,
-        :func:`skrub.selectors.glob()`, :func:`skrub.selectors.filter()`, etc.
-
     See Also
     --------
     skrub.ApplyToCols :
