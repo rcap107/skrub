@@ -83,7 +83,7 @@ def all():
 
     See Also
     --------
-    inv : Select all columns except those matched by a selector
+    inv : Invert a selector
     cols : Select columns by exact name
 
     Examples
@@ -110,7 +110,7 @@ def all():
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
 
-    Use ``all()`` as a base for exclusion:
+    Use ``all()`` as a base for excluding columns, for example by name:
 
     >>> s.select(df, s.all() - 'ID')
        height_mm  width_mm kind
@@ -128,7 +128,7 @@ def all():
 
 
 def cols(*columns):
-    """Select columns whose names are explicitly listed.
+    """Select the columns whose names are explicitly listed.
 
     See Also
     --------
@@ -241,7 +241,7 @@ def make_selector(obj):
     """Normalize a selector, column name, or list of names into a ``Selector``\
     object.
 
-    This function normalizes user input into a consistent selector object:
+    This function converts user input into a consistent selector object:
 
     - Selectors are returned as-is
     - Strings are converted to ``cols(name)``
@@ -250,10 +250,7 @@ def make_selector(obj):
     Parameters
     ----------
     obj : selector, str, or list
-        The object to normalize:
-        - A ``Selector`` object: returned as-is
-        - A string: converted to ``cols(name)``
-        - A list/iterable of strings: converted to ``cols(*names)``
+        The object to normalize.
 
     Returns
     -------
@@ -263,8 +260,6 @@ def make_selector(obj):
     See Also
     --------
     cols : Select specific columns by name
-    select : Apply a selector and return matching columns
-    drop : Apply a selector and return non-matching columns
 
     Examples
     --------
@@ -362,7 +357,7 @@ def select(df, selector):
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
 
-    Exclude a column by combining a selector and a column name:
+    Select all columns except 'ID':
 
     >>> selector = s.all() - 'ID'
     >>> selector
@@ -387,9 +382,9 @@ def select(df, selector):
     0      297.0     210.0   4
     1      420.0     297.0   3
 
-    Combine multiple criteria:
+    Combine multiple selectors:
 
-    >>> s.select(df, s.all() & s.glob('*_mm'))
+    >>> s.select(df, s.numeric() & s.glob('*_mm'))
        height_mm  width_mm
     0      297.0     210.0
     1      420.0     297.0
@@ -528,7 +523,7 @@ class Selector:
     ...     'ID': [4, 3],
     ... })
 
-    Use a selector to get matching column names:
+    Use a selector to get the names of matching columns:
 
     >>> s.numeric().expand(df)
     ['height_mm', 'width_mm', 'ID']
@@ -836,7 +831,6 @@ def filter(predicate, *args, **kwargs):
     predicate : callable
         A function that takes a column and optional extra arguments, returning
         ``True`` to select the column or ``False`` to exclude it.
-
         Signature: ``predicate(col, *args, **kwargs) -> bool``
     *args : tuple
         Extra positional arguments passed to the predicate.
@@ -951,7 +945,7 @@ def filter_names(predicate, *args, **kwargs):
 
     This selector is useful to:
 
-    - Select columns matching regex patterns (use ``glob()`` or ``regex()``
+    - Select columns matching regex patterns (consider using ``glob()`` or ``regex()``
       for simple patterns)
     - Check column names for prefixes, suffixes, or substrings
     - Filter by naming conventions (e.g., 'internal_*', 'tmp_*')
