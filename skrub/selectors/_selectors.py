@@ -207,11 +207,6 @@ def numeric():
     This selector matches both integer and floating-point columns, equivalent to
     ``integer() | float()``.
 
-    Notes
-    -----
-    Boolean columns are intentionally excluded because they typically require
-    different preprocessing strategies than numeric features.
-
     See Also
     --------
     integer :
@@ -278,11 +273,6 @@ def integer():
     discrete numeric features or ID-like columns.
 
     Note that ``integer() | float()`` is equivalent to :func:`numeric()`.
-
-    Notes
-    -----
-    Boolean columns are intentionally excluded because they typically require
-    different preprocessing strategies than numeric features.
 
     See Also
     --------
@@ -473,6 +463,24 @@ def has_dtype(*dtypes):
            items  count
     0  [A4, A3]      2
     1      [A5]      1
+
+    This also works with complex dtypes such as GeometryDtype in GeoPandas:
+
+    >>> import geopandas as gpd # doctest: +SKIP
+    >>> from shapely.geometry import Point # doctest: +SKIP
+    >>> gdf = gpd.GeoDataFrame( # doctest: +SKIP
+    ...     {"city": ["Paris", "Berlin"], "value": [1, 2]},
+    ...     geometry=[Point(2.35, 48.86), Point(13.40, 52.52)],
+    ...     crs="EPSG:4326",
+    ... )
+    >>> gdf # doctest: +SKIP
+        city  value            geometry
+    0   Paris      1  POINT (2.35 48.86)
+    1  Berlin      2  POINT (13.4 52.52)
+    >>> s.select(gdf, s.has_dtype(gdf.geometry.dtype)) # doctest: +SKIP
+                geometry
+    0  POINT (2.35 48.86)
+    1  POINT (13.4 52.52)
 
     """
     return Filter(_has_dtype, args=dtypes, name="has_dtype")
@@ -832,8 +840,8 @@ def cardinality_below(threshold):
     below ``threshold``.
 
     This selector is useful for identifying low-cardinality (discrete) features for
-    categorical encoding or for finding ID-like columns with high cardinality for
-    exclusion.
+    categorical encoding or for finding ID-like columns with high cardinality to
+    encode them in specific ways.
 
     Parameters
     ----------
@@ -878,7 +886,7 @@ def cardinality_below(threshold):
     2     1     2     2     3     3   3
     3  <NA>  <NA>     2  <NA>     3   4
 
-    Select low-cardinality columns:
+    Select low-cardinality columns (e.g., below 3 unique values):
 
     >>> s.select(df, s.cardinality_below(3))
          a1    a2  a2_b
@@ -887,16 +895,7 @@ def cardinality_below(threshold):
     2     1     2     2
     3  <NA>  <NA>     2
 
-    Select columns with cardinality below 4:
-
-    >>> s.select(df, s.cardinality_below(4))
-         a1    a2  a2_b    a3  a3_b
-    0     1     1     1     1     1
-    1     1     1     1     2     2
-    2     1     2     2     3     3
-    3  <NA>  <NA>     2  <NA>     3
-
-    Invert to select high-cardinality columns (e.g., exclude low-cardinality):
+    Invert to select high-cardinality columns (i.e., exclude low-cardinality):
 
     >>> s.select(df, ~s.cardinality_below(3))
         a3  a3_b  a4
@@ -915,10 +914,7 @@ def cardinality_below(threshold):
     3  <NA>  <NA>     2  <NA>     3   4
 
     Note that numeric features are still treated as numeric even if they have low
-    cardinality (e.g., IDs): convert them to categorical (e.g., using
-    :class:`ToCategorical`) if you want to treat them as categorical features
-    instead.
-
+    cardinality (e.g., IDs).
     """
     return Filter(_cardinality_below, args=(threshold,), name="cardinality_below")
 
@@ -964,10 +960,10 @@ def has_nulls(proportion=0.0):
         Select columns whose cardinality is below a threshold.
     DropUninformative :
         Automatically drop columns that are uninformative, including columns with
-        excessive null values.
+        more null values than a specified threshold.
     Cleaner :
         Parse common null representations (e.g., 'NA', 'missing') into proper null
-        values.
+        values, and possibly drop columns with excessive nulls.
     filter :
         Use for custom null-based selection criteria.
 
