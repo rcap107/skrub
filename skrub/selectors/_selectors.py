@@ -99,7 +99,7 @@ def regex(pattern, flags=0):
     This is useful for selecting columns with specific naming conventions or
     patterns that glob patterns cannot express, so that regular expressions are
     needed (e.g., columns matching ``'^feature_[0-9]+$'``).
-    For simple wildcard patterns, prefer :func:`glob`.
+    For simple wildcard patterns, consider :func:`glob`.
 
     Parameters
     ----------

@@ -808,9 +808,7 @@ class Filter(Selector):
 def filter(predicate, *args, **kwargs):
     """Select columns for which a custom predicate function returns ``True``.
 
-    This is the most flexible selector, allowing arbitrary column selection logic
-    based on column data (values, dtype, shape, etc.). The predicate receives the
-    actual column object (pandas/polars Series) for inspection.
+    This allows selecting columns based on an arbitrary criterion. The predicate takes as in put the column (a pandas or polars Series) and must return True if it should be selected and False otherwise.
 
     This selector is useful:
 
@@ -838,7 +836,6 @@ def filter(predicate, *args, **kwargs):
     See Also
     --------
     filter_names : Select columns based only on their name (not content)
-    Selector.expand : Evaluate a selector to get matching column names
 
     Notes
     -----
@@ -933,7 +930,7 @@ class NameFilter(Filter):
 
 
 def filter_names(predicate, *args, **kwargs):
-    r"""Select columns based only on their name (not content or type).
+    r"""Select columns based only on their name.
 
     This is a specialized version of ``filter`` that passes only the column name
     (a string) to the predicate, rather than the column itself. Use this when
@@ -963,7 +960,7 @@ def filter_names(predicate, *args, **kwargs):
     Returns
     -------
     Selector
-        A ``NameFilter`` selector that matches columns where ``predicate(name)``
+        A ``NameFilter`` selector that matches columns where ``predicate(name, *args, **kwargs)``
         returns ``True``.
 
     See Also
@@ -971,7 +968,6 @@ def filter_names(predicate, *args, **kwargs):
     filter : Select columns based on their content or properties
     glob : Select columns by wildcard pattern matching
     regex : Select columns by regular expression pattern matching
-    Selector.expand : Evaluate a selector to get matching column names
 
     Notes
     -----
@@ -1014,6 +1010,8 @@ def filter_names(predicate, *args, **kwargs):
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
 
+    Prefer using *args and **kwargs to pass extra arguments to the predicate, rather than defining a dynamic function which may cause pickling errors.
+    
     Select columns ending with a suffix (using lambda):
 
     >>> selector = s.filter_names(lambda name: name.endswith('_mm'))
