@@ -81,11 +81,6 @@ from .._utils import repr_args
 def all():
     """Select all columns in a dataframe.
 
-    Returns
-    -------
-    Selector
-        A ``Selector`` that matches all columns.
-
     See Also
     --------
     inv : Invert a selector
@@ -131,11 +126,6 @@ def cols(*columns):
     The selected columns are returned in the order they are listed in ``columns``,
     not the order they appear in the dataframe. If any of the requested columns are
     missing from the dataframe, an exception is raised.
-
-    Returns
-    -------
-    Selector
-        A ``Selector`` that matches the specified columns.
 
     See Also
     --------
@@ -497,7 +487,7 @@ class Selector:
     **How to use selectors**
 
     - **Direct selection:** ``s.select(df, selector)`` returns a filtered dataframe
-    - **With :class:`skrub.ApplyToCols`:** ``ApplyToCols(transformer, cols=selector)``
+    - **With** :class:`skrub.ApplyToCols`: ``ApplyToCols(transformer, cols=selector)``
       applies a transformer to selected columns
     - **In DataOps:** ``skrub.X(df).skb.apply(transformer, cols=selector)``
     - **Manual expansion:** ``selector.expand(df)`` gets column names for manual use
