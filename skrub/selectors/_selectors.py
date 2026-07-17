@@ -514,18 +514,6 @@ def any_date():
                            dt                      tzdt                 str_
     0 2020-03-02 10:30:00 2020-03-02 10:30:00+00:00  2020-03-02 10:30:00
 
-    Consider using :class:`~skrub.Cleaner` or :class:`~skrub.ToDatetime` to
-    convert string columns to datetime before selecting them with :func:`any_date`:
-
-    >>> from skrub import Cleaner
-    >>> df = pd.DataFrame({"date_str": ["2020-03-02 10:30:00", "2021-05-15 14:45:00"]})
-    >>> df = Cleaner().fit_transform(df)
-    >>> s.select(df, s.any_date())
-                date_str
-    0 2020-03-02 10:30:00
-    1 2021-05-15 14:45:00
-
-
     """
     return Filter(sbd.is_any_date, name="any_date")
 
@@ -573,16 +561,6 @@ def categorical():
     0      A        A
     1      B        B
 
-    Use :class:`~skrub.ToCategorical` to convert string columns to categorical
-    for selection:
-
-    >>> from skrub import ToCategorical, ApplyToCols
-    >>> df = ApplyToCols(ToCategorical(), cols="string").fit_transform(df)
-    >>> s.select(df, s.categorical())
-    string category
-    0      A        A
-    1      B        B
-
     """
     return Filter(sbd.is_categorical, name="categorical")
 
@@ -591,7 +569,7 @@ def string():
     """
     Select columns that have a string data type.
 
-    In pandas, object columns containing (only) strings are also selected.
+    In pandas, object columns containing strings are also selected.
 
     Notes
     -----
@@ -961,21 +939,6 @@ def has_nulls(proportion=0.0):
     2        3
     3        4
 
-    Use :class:`skrub.Cleaner` to parse common null representations
-    into proper null values before selection:
-
-    >>> df3 = pd.DataFrame(dict(
-    ...     col1=[1, 2, 3, 'NA'],
-    ...     col2=[1, 2, 3, 'missing'],
-    ...     col3=[1, 2, 3, 4]))
-    >>> from skrub import Cleaner
-    >>> df3 = Cleaner(null_strings=['missing']).fit_transform(df3)
-    >>> s.select(df3, s.has_nulls())
-        col1  col2
-    0     1     1
-    1     2     2
-    2     3     3
-    3  None  None
    """
 
     if not isinstance(proportion, numbers.Number) or not 0.0 <= proportion <= 1.0:

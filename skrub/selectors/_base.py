@@ -81,6 +81,11 @@ from .._utils import repr_args
 def all():
     """Select all columns in a dataframe.
 
+    Returns
+    -------
+    Selector
+        A ``Selector`` that matches all columns.
+
     See Also
     --------
     inv : Invert a selector
@@ -126,6 +131,11 @@ def cols(*columns):
     The selected columns are returned in the order they are listed in ``columns``,
     not the order they appear in the dataframe. If any of the requested columns are
     missing from the dataframe, an exception is raised.
+
+    Returns
+    -------
+    Selector
+        A ``Selector`` that matches the specified columns.
 
     See Also
     --------
@@ -193,6 +203,11 @@ def inv(obj):
     This selects all columns except those that are matched by the input; it is
     equivalent to ``all() - obj`` or ``~make_selector(obj)``. The argument
     ``obj`` can be a selector but also a column name or list of column names.
+
+    Returns
+    -------
+    Selector
+        A ``Selector`` that is the inverse of the input selector.
 
     See Also
     --------
@@ -457,6 +472,7 @@ def drop(df, selector):
       kind  ID
     0   A5   5
     1   A4   4
+
     Preserve only certain types (via drop):
 
     >>> s.drop(df, s.all() - s.string())
@@ -498,6 +514,8 @@ class Selector:
 
         This class is not meant to be instantiated manually. Create selectors using
         builder functions such as :func:`skrub.selectors.all()`,
+        :func:`skrub.selectors.cols()`, :func:`skrub.selectors.glob()`, etc.
+
     See Also
     --------
     skrub.ApplyToCols :
