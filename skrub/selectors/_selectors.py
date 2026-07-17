@@ -892,7 +892,7 @@ def has_nulls(proportion=0.0):
           b     c
     0   0.0     a
     1   ...     b
-    2  20.0  ...
+    2  20.0   ...
 
     Select columns with >50% missing values:
 

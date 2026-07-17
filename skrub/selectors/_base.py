@@ -855,7 +855,7 @@ def filter(predicate, *args, **kwargs):
     The column is kept if ``predicate`` returns ``True``.
 
     To pickle the selector, use importable functions as predicates
-    rather than lambdas. Prefer passing parameters via ``*args`` or ``**kwargs``:
+    rather than lambdas. Prefer passing parameters via ``*args`` or ``**kwargs``::
 
         # Picklable (importable function + explicit args)
         s.filter(str.startswith, 'prefix')
