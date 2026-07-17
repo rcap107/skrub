@@ -166,8 +166,7 @@ def regex(pattern, flags=0):
 
 
 def numeric():
-    """
-    Select columns that have a numeric data type.
+    """Select columns that have a numeric data type.
 
     Numeric columns include both integer and floating-point types,
     but exclude Boolean columns.
@@ -233,8 +232,7 @@ def numeric():
 
 
 def integer():
-    """
-    Select columns that have an integer data type.
+    """Select columns that have an integer data type.
 
     Boolean columns are not matched by this selector, only signed and unsigned
     ints are.
@@ -297,8 +295,7 @@ def integer():
 
 
 def float():
-    """
-    Select columns that have a floating-point data type (float32, float64, etc.)
+    """Select columns that have a floating-point data type (float32, float64, etc.)
 
     See Also
     --------
@@ -364,8 +361,7 @@ def _has_dtype(column, *dtypes):
 
 
 def has_dtype(*dtypes):
-    """
-    Select columns whose dtype is equal to one of the provided dtypes.
+    """Select columns whose dtype is equal to one of the provided dtypes.
 
     This is an advanced selector for edge cases where you need to match specific
     dtypes not covered by other selectors. Use this when working with specialized
@@ -450,9 +446,7 @@ def has_dtype(*dtypes):
 
 
 def any_date():
-    """
-    Select columns that have a Date or Datetime data type.
-
+    """Select columns that have a Date or Datetime data type.
 
     Notes
     -----
@@ -519,8 +513,7 @@ def any_date():
 
 
 def categorical():
-    """
-    Select columns that have a Categorical (or polars Enum) data type.
+    """Select columns that have a Categorical (or polars Enum) data type.
 
     See Also
     --------
@@ -566,8 +559,7 @@ def categorical():
 
 
 def string():
-    """
-    Select columns that have a string data type.
+    """Select columns that have a string data type.
 
     In pandas, object columns containing strings are also selected.
 
@@ -631,8 +623,7 @@ def string():
 
 
 def object():
-    """
-    Select columns whose dtype is ``object`` (pandas) or ``pl.Object`` (polars).
+    """Select columns whose dtype is ``object`` (pandas) or ``pl.Object`` (polars).
 
     Note that object columns may contain mixed types (e.g., strings and numbers) and are
     broader than string columns. Use this selector when you specifically need
@@ -698,8 +689,7 @@ def object():
 
 
 def boolean():
-    """
-    Select columns that have a Boolean data type.
+    """Select columns that have a Boolean data type.
 
     See Also
     --------
@@ -763,8 +753,7 @@ def _cardinality_below(column, threshold):
 
 
 def cardinality_below(threshold):
-    """
-    Select columns whose cardinality (number of unique values) is (strictly) \
+    """Select columns whose cardinality (number of unique values) is (strictly) \
     below ``threshold``.
 
     This selector is useful for identifying low-cardinality (discrete) features for
@@ -853,8 +842,7 @@ def _null_count_check(column, proportion):
 
 
 def has_nulls(proportion=0.0):
-    """
-    Select columns that contain at least one null value, or a proportion of null \
+    """Select columns that contain at least one null value, or a proportion of null \
     values above a given threshold.
 
     Use this selector to identify columns needing imputation or
