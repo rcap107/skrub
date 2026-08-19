@@ -5,15 +5,10 @@
 .. |SingleColumnTranformer| replace:: :class:`core.SingleColumnTranformer`
 .. |ToDatetime| replace:: :class:`ToDatetime`
 
-.. _user_guide_single_column_transformer:
-
-Advanced columnwise operations
-------------------------------
-
 .. _single_column_transformer:
 
-The single column transformer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How to define a custom SingleColumnTranformer
+---------------------------------------------
 
 In cases where we want to apply a custom transformation to a series we need the |ApplyToCols|
 structure to handle multiple columns, and if this transformation needs to be able to reject certain
@@ -28,9 +23,9 @@ followed by three digits.
 >>> df = pd.DataFrame({'sent': ["AB123", "BD601", "HS014"], 'received': ["AB1C45", "DU3K93", "WB9M88"]})
 >>> df
     sent received
-0  AB123   AB1C45
-1  BD601   DU3K93
-2  HS014   WB9M88
+0  AB123   C45
+1  BD601   K93
+2  HS014   M88
 
 We would like to be able to "unpack" the zip code so that we have a column for the
 letters and one for the digits; the transformer should also be able to "reject" a column
@@ -40,25 +35,48 @@ through unchanged, as it cannot be handled by this particular transformer.
 We can therefore define a custom class that inherits from |SingleColumnTranformer|
 and that raises |RejectColumn| if a column cannot be handled:
 
->>> from skrub.core import RejectColumn, SingleColumnTransformer
->>> class ZipcodeParser(SingleColumnTransformer):
-...     def __init__(self):
-...         return
-...     def fit_transform(self, X, y=None):
-...         if any(X.map(len) != 5):
-...             raise RejectColumn('This transformer only takes zip codes of length 5.')
-...         else:
-...             letters = X.map(lambda s: s[:2])
-...             try:
-...                 numbers = X.map(lambda s: int(s[2:]))
-...             except:
-...                 raise RejectColumn('Input zip codes must consist of two letters followed by three numbers.')
-...             return(pd.DataFrame({'letters': letters, 'numbers': numbers}))
+>>> from sklearn.base import TransformerMixin
+>>> from skrub.core import SingleColumnTransformer, RejectColumn
+>>> class ZipcodeParser(SingleColumnTransformer, TransformerMixin):
+...     def __init__(self, n_letters=2, n_numbers=3):
+...         self.n_letters = n_letters
+...         self.n_numbers = n_numbers
+...
+...     def fit(self, X, y=None):
+...         if any(X.map(len) != self.n_letters + self.n_numbers):
+...             raise RejectColumn(
+...                 f"Input zip codes must have length {self.n_letters + self.n_numbers}."
+...             )
+...         return self
+...
+...     def transform(self, X):
+...         letters = X.map(lambda s: s[: self.n_letters])
+...         numbers = X.map(lambda s: int(s[self.n_letters:]))
+...         return pd.DataFrame({"letters": letters, "numbers": numbers})
+...
 >>> ZipcodeParser().fit_transform(df["sent"])
   letters  numbers
 0      AB      123
 1      BD      601
 2      HS       14
+
+Note that the length of the values in column "received" is incorrect (3 characters
+rather than 5). As a result, fitting on them raises a :class:`~skrub.core.RejectColumn`
+exception:
+
+>>> ZipcodeParser().fit(df["received"])
+...
+RejectColumn: Input zip codes must have length 5.
+
+Transforming "received" after fitting on "sent" leads to a runtime error caused
+by the fact that the ``int()`` method receives the wrong string subset.
+
+>>> ZipcodeParser().fit(df["sent"]).transform(df["received"])
+...
+ValueError: invalid literal for int() with base 10: '1C45'
+
+Robust error checking should be performed at fit and transform time to catch these
+situations; to keep the complexity of the example low we avoid doing so here.
 
 We can use |ApplyToCols| to apply this transformer to the entire dataframe at once,
 and set ``allow_reject=True`` to let rejected columns through without changes:
