@@ -9,7 +9,7 @@ class ToCategorical(SingleColumnTransformer):
     Convert a string column to Categorical dtype.
 
     This transformer ensures that a given string or categorical column has
-    Categorical dtype. This is done to mark columns to be treated as categorical
+    Categorical dtype so that it is treated as categorical
     by downstream transformers and learners.
 
     Notes
@@ -26,9 +26,14 @@ class ToCategorical(SingleColumnTransformer):
     a polars column with dtype ``String``, is converted to a categorical
     column. Categorical columns are passed through.
 
+    If ``accept_numeric`` is set to ``"all"``, then both integer and float
+    columns are accepted and converted to categorical. If it is set to ``"int"``,
+    then only integer columns are accepted. The default value is ``"int"``.
+
     Any other type of column is rejected by raising a ``RejectColumn``
     exception. **Note:** the ``TableVectorizer`` only sends string or
-    categorical columns to its ``low_cardinality_transformer``. Therefore it is
+    categorical columns to its ``low_cardinality_transformer``, regardless
+    of the inputted value of ``accept_numeric``. Therefore it is
     always safe to use a ``ToCategorical`` instance as the
     ``low_cardinality_transformer``.
 
@@ -88,6 +93,16 @@ class ToCategorical(SingleColumnTransformer):
         ...
     skrub.core.RejectColumn: Column 'c' does not contain strings.
 
+    Unless ``accept_numeric`` is set to ``"int"`` or ``"all"``, in which case integer
+    columns are accepted in the former case, and both integer and float columns are
+    accepted in the latter:
+
+    >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'), accept_numeric="all")
+    0    1.1
+    1    2.2
+    Name: c, dtype: category
+    Categories (2, float64): [1.1, 2.2]
+
     ``object`` columns that do not contain only strings are also rejected:
 
     >>> s = pd.Series(['one', 1], name='c')
@@ -143,13 +158,19 @@ class ToCategorical(SingleColumnTransformer):
     True
     """
 
-    def fit_transform(self, column, y=None):
+    def fit_transform(self, column, accept_numeric="int", y=None):
         """Fit the encoder and transform a column.
 
         Parameters
         ----------
         column : pandas or polars Series
             The input to transform.
+
+        accept_numeric : str, default="int"
+            How to handle numeric columns. If "int", will convert integer
+            columns to categorical. If "all", both float and integer columns
+            will be accepted. If None, no numeric
+            columns will be accepted.
 
         y : None
             Ignored.
@@ -163,9 +184,17 @@ class ToCategorical(SingleColumnTransformer):
 
         if sbd.is_categorical(column):
             return column
-        if not sbd.is_string(column):
-            raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
-        return sbd.to_categorical(column)
+        elif sbd.is_string(column):
+            return sbd.to_categorical(column)
+        elif sbd.is_integer(column) and accept_numeric in ("int", "all"):
+            return sbd.to_categorical(column)
+        elif sbd.is_float(column) and accept_numeric == "all":
+            return sbd.to_categorical(column)
+        else:
+            raise RejectColumn(
+                f"Column {sbd.name(column)!r} does not contain strings "
+                "or numerical data (if accept_numeric is 'int' or 'all')."
+            )
 
     def transform(self, column):
         """Transform a column.
