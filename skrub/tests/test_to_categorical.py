@@ -13,21 +13,9 @@ def test_to_categorical(df_module):
     # categorial columns are accepted
     assert ToCategorical().fit_transform(out) is out
     assert ToCategorical().fit(out).transform(out) is out
-    # default behaviour accepts integer and string
-    # columns, but not float
-    i = df_module.make_column("c", [1, 2, None])
-    assert ToCategorical().fit_transform(i, accept_numeric="int")
-    assert ToCategorical().fit(i).transform(i, accept_numeric="int")
-    # unless accept_numeric is None, in which case
-    # only string and categorical columns are accepted
-    with pytest.raises(RejectColumn, match=".*does not contain strings or*"):
-        ToCategorical().fit_transform(i, accept_numeric=None)
-    # if accept_numeric is set to "all", then both integer and
-    # float columns are accepted
+    # non-string, non-categorical columns are rejected
     f = df_module.make_column("c", [1.1, 2.2, None])
-    assert ToCategorical().fit_transform(f, accept_numeric="all")
-    # if accept_numeric != "all", then float columns are rejected
-    with pytest.raises(RejectColumn, match=".*does not contain strings or*"):
-        ToCategorical().fit_transform(f)
+    with pytest.raises(RejectColumn, match=".*does not contain strings"):
+        ToCategorical().fit(f)
     # but once accepted during fit, transform works on any column
     assert sbd.is_categorical(ToCategorical().fit(s).transform(f))
