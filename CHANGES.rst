@@ -78,7 +78,8 @@ Bugfixes
 Deprecations
 ------------
 - The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
-  as an alias, but will be removed in a future release.
+  as an alias, but will be removed in a future release. :pr:`2255` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
 
 
 Release 0.10.0
