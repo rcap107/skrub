@@ -9,9 +9,23 @@ Release history
 Ongoing development
 ===================
 
-
 New Features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Deprecations
+------------
+- The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
+  as an alias, but will be removed in a future release. :pr:`2255` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
+Release 0.10.1
+===================
 
 Changes
 -------
@@ -57,7 +71,6 @@ Bugfixes
 - :class:`DropSimilar` now works with Polars dataframes when PyArrow is not
   installed by avoiding the unused Pearson's correlation computation.
   :pr:`2216` by :user:`Shreyansh Goyal <ShreyanshGoyal>`.
-
 - The parallel coordinate plot created by :meth:`ParamSearch.show_results` could
   have incorrect tick labels in some cases. This has been fixed in :pr:`2215` by
   :user:`Jérôme Dockès <jeromedockes>`.
@@ -74,12 +87,9 @@ Bugfixes
   aggregated output columns varied between runs. They now keep the order in which
   the columns appear in the auxiliary table. This has been fixed in :pr:`2250` by
   :user:`Dylan Pulver <dylanpulver>`.
-
-Deprecations
-------------
-- The :class:`TextEncoder` has been renamed :class:`LLMEncoder`. It is still available
-  as an alias, but will be removed in a future release. :pr:`2255` by
-  :user:`Riccardo Cappuzzo <rcap107>`.
+- A ``cloudpickle`` import error that could happen after updating some required
+  dependencies was fixed in :pr:`2261` by :user:`Jérôme Dockès <jeromedockes>`
+  and :user:`Riccardo Cappuzzo <rcap107>`.
 
 
 Release 0.10.0
