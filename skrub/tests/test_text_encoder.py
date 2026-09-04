@@ -253,7 +253,7 @@ def test_categorical_features(df_module, encoder):
 def test_deprecated_text_encoder_warning(df_module):
     # We need to define a new encoder with the proper class rather than reusing
     # the fixture (which is a LLMEncoder)
-    with pytest.warns(DeprecationWarning, match="TextEncoder is deprecated.*"):
+    with pytest.warns(FutureWarning, match="TextEncoder is deprecated.*"):
         TextEncoder(
             model_name="sentence-transformers/paraphrase-albert-small-v2",
             device="cpu",

@@ -5,6 +5,7 @@ import warnings
 from pathlib import Path
 
 from sklearn.decomposition import PCA
+from sklearn.utils import deprecated
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -454,23 +455,8 @@ class LLMEncoder(SingleColumnTransformer):
         ]
 
 
+@deprecated(
+    "TextEncoder has been renamed to LLMEncoder andwill be removed in version 0.12."
+)
 class TextEncoder(LLMEncoder):
-    """
-    Deprecated: Use :class:`~skrub.LLMEncoder` instead.
-
-    .. deprecated:: 0.11
-        The ``TextEncoder`` has been renamed to ``LLMEncoder``, and will be removed
-        in a future release.
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        import warnings
-
-        warnings.warn(
-            "TextEncoder is deprecated and will be removed in a future release. "
-            "Use LLMEncoder instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        super().__init__(*args, **kwargs)
+    pass
