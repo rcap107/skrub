@@ -34,6 +34,11 @@ def _example_data_dict():
     }
 
 
+# this is needed to ignore the skrub/_docs folder when running pytest
+# otherwise, the examples in the folder are executed any time test discovery is run
+collect_ignore_glob = ["_docs/**/*.py"]
+
+
 _DATAFRAME_MODULES_INFO = {}
 _DATAFRAME_MODULES_INFO["pandas-numpy-dtypes"] = SimpleNamespace(
     **{
@@ -251,12 +256,13 @@ BASE_CONFIG = get_config()
 
 
 @pytest.fixture(autouse=True)
-def reset_config_to_base():
+def reset_config_to_base(monkeypatch):
     """Autouse fixture that resets config to base_config before each test.
 
     This ensures that tests run in isolation, don't affect each other's
     configuration state, and clean up after themselves.
     """
+    monkeypatch.delenv("SKB_NO_GRAPHVIZ", raising=False)
     set_config(**BASE_CONFIG)
     yield
     # Also reset after the test to ensure clean state for next test
